@@ -20,15 +20,37 @@ router = APIRouter(
 
 @router.post("/register", response_model=Response)
 async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get_database)):
-    device_info = await device_service.register_device(device,db)
+    device_info = await device_service.register_device(device, db)
     return Response.success(device_info)
 
 
 @router.get("/test")
 async def test():
     base_dir = Path(__file__).resolve().parent.parent
-    playbook_path = base_dir / "playbook" / "deploy_vlan.yml"
-
+    playbook_name = "test_playbook.yml"
+    playbook_path = base_dir / "playbook" / playbook_name
+    test_json = {
+        "interfaces": [
+            {
+                "name": "eth3",
+                "address": "192.168.3.1/24"
+            },
+            {
+                "name": "eth4",
+                "address": "192.168.4.1/24"
+            }
+        ],
+        "ospf_areas": [
+            {
+                "area": "0",
+                "networks": ["192.168.3.0/24"]
+            },
+            {
+                "area": "1",
+                "networks": ["192.168.4.0/24"]
+            }
+        ]
+    }
     r = ansible_runner.run(
         private_data_dir=str(base_dir),
         playbook=str(playbook_path),
@@ -42,13 +64,12 @@ async def test():
             }
         },
         extravars={
-            "vlan_id": 500,
-            "target_interface": "eth3",
             "ansible_user": "admin",
             "ansible_ssh_pass": "password",
             "ansible_connection": "network_cli",
-            "ansible_network_os": "vyos.vyos.vyos",\
-            "vlan_desc": "USER_VLAN"
+            "ansible_network_os": "vyos.vyos.vyos",
+            "vlan_desc": "USER_VLAN",
+            **test_json
         }
     )
 

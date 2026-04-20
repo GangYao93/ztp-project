@@ -17,7 +17,6 @@ COPY requirements.txt ./
 
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && pip install ansible-core \
     && ansible-galaxy collection install vyos.vyos
 
 COPY . .

@@ -1,0 +1,70 @@
+---
+- name: dynamic_vyos
+  hosts: all
+  gather_facts: no
+  tasks:
+    # ==========================================
+    # 1. 配置物理接口基础信息 (描述)
+    # ==========================================
+    - name: int_desc
+      vyos.vyos.vyos_interfaces:
+        config:
+          - name: "{{ item.name }}"
+            description: "{{ item.description | default(omit) }}"
+        state: merged
+      loop: "{{ interfaces | default([]) }}"
+      when: item.description is defined
+
+    # ==========================================
+    # 2. 配置接口 IP 地址
+    # ==========================================
+    - name: int_addr
+      vyos.vyos.vyos_l3_interfaces:
+        config:
+          - name: "{{ item.name }}"
+            ipv4:
+              - address: "{{ item.address }}"
+        state: merged
+      # 恢复成最普通的循环，彻底告别 subelements
+      loop: "{{ interfaces | default([]) }}"
+      # 核心防护：只有在 JSON 里传了 address 字段的接口，才会执行这个任务
+      when: item.address is defined
+    # ==========================================
+    # 3. 按需配置 OSPF (只针对带有 ospf 字段的接口)
+    # ==========================================
+    - name: 配置全局 OSPF 宣告
+      vyos.vyos.vyos_config:
+        lines:
+          - set protocols ospf area {{ item.0.area }} network '{{ item.1 }}'
+        match: exact
+      # subelements 会把 [{area: "0", networks: ["1.1.1.0/24", "2.2.2.0/24"]}]
+      # 拆分成 (area:0, 1.1.1.0/24) 和 (area:0, 2.2.2.0/24) 两次循环
+      loop: "{{ ospf_areas | default([]) | subelements('networks', skip_missing=True) }}"
+      when: ospf_areas | default([]) | length > 0
+
+    # ==========================================
+    # 4. 按需配置 VRRP (只针对带有 vrrp 字段的接口)
+    # ==========================================
+    - name: vrrp
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.vrrp.group }} virtual-address '{{ item.vrrp.virtual_address }}'
+          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.vrrp.group }} priority {{ item.vrrp.priority }}
+        match: exact
+      loop: "{{ interfaces | default([]) }}"
+      # 核心逻辑：只有该接口的 JSON 里包含 vrrp 字段，才执行此命令
+      when: item.vrrp is defined
+
+    # ==========================================
+    # 5. 按需配置 DHCP 服务器 (全局配置)
+    # ==========================================
+    - name: 配置 DHCP Server
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} default-router '{{ item.gateway }}'
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} start {{ item.start_ip }} stop {{ item.end_ip }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
+        match: exact
+      loop: "{{ dhcp_servers | default([]) }}"
+      # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
+      when: dhcp_servers | default([]) | length > 0
