@@ -32,7 +32,7 @@ async def test():
     r = ansible_runner.run(
         private_data_dir=str(base_dir),
         playbook=str(playbook_path),
-        inventory=f"10.10.0.20,",
+        inventory=f"10.10.0.21,",
         extravars={
             "vlan_id": 500,
             "target_interface": "eth1",
