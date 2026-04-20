@@ -39,7 +39,8 @@ async def test():
             "ansible_user": "admin",
             "ansible_ssh_pass": "password",
             "ansible_connection": "network_cli",
-            "ansible_network_os": "vyos.vyos.vyos"
+            "ansible_network_os": "vyos.vyos.vyos",\
+            "vlan_desc": "USER_VLAN"
         }
     )
 
