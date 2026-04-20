@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: gyao1123/ztp-controllerp:latest
+          tags: gyao1123/ztp-controller:$(date +%s)
