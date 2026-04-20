@@ -14,5 +14,5 @@
       vyos.vyos.vyos_config:
         lines:
           - set interfaces ethernet {{ target_interface }} vif {{ vlan_id }} description '{{ vlan_desc }}'
-        match: exact
+        match: line
         save: yes          # 相当于在 VyOS 中执行 commit 和 save
