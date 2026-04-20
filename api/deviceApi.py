@@ -35,7 +35,7 @@ async def test():
         inventory=f"10.10.0.21,",
         extravars={
             "vlan_id": 500,
-            "target_interface": "eth1",
+            "target_interface": "eth3",
             "ansible_user": "admin",
             "ansible_ssh_pass": "password",
             "ansible_connection": "network_cli",
