@@ -3,4 +3,10 @@ uvicorn[standard]==0.44.0
 sqlalchemy==2.0.49
 aiosqlite==0.22.1
 pydantic==2.13.1
+ansible==9.3.0
 ansible-runner==2.4.3
+
+paramiko==3.5.0
+ansible-pylibssh==1.2.2
+netmiko==4.3.0
+jmespath==1.0.1
