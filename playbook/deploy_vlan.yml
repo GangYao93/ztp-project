@@ -1,0 +1,18 @@
+---
+# playbook: deploy_vyos_vlan.yml
+- name: 自动化配置 VyOS 设备的 VLAN 和接口
+  hosts: all
+  gather_facts: false      # 网络设备不需要收集 Linux 系统信息，关掉可提速
+
+  # 定义默认变量 (可以被 Python 传入的 extravars 覆盖)
+  vars:
+    vlan_id: 500
+
+  tasks:
+
+    - name: 2. 配置 VLAN 子接口 (VIF)
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ target_interface }} vif {{ vlan_id }} description '{{ vlan_desc }}'
+        match: exact
+        save: yes          # 相当于在 VyOS 中执行 commit 和 save

@@ -1,0 +1,11 @@
+{
+  "ztp": {
+    "01-run-smart-bootstrap": {
+      "plugin": {
+        "url": "tftp://10.10.0.2/bootstrap.py"
+      },
+      "ignore-result": false,
+      "reboot-on-success": false
+    }
+  }
+}
