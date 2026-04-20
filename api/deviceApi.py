@@ -29,6 +29,7 @@ async def test():
     base_dir = Path(__file__).resolve().parent.parent
     playbook_name = "test_playbook.yml"
     playbook_path = base_dir / "playbook" / playbook_name
+    print(playbook_path)
     test_json = {
         "interfaces": [
             {
