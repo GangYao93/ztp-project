@@ -21,8 +21,8 @@ router = APIRouter(
 @router.post("/register", response_model=Response)
 async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get_database)):
     device_info = await device_service.register_device(device, db)
-    if not device_info.id:
-        return Response.fail()
+    # if not device_info.id:
+    #     return Response.fail()
     await device_service.ansible_test(device_info.mac,device_info.ip_address)
     return Response.success(device_info)
 
