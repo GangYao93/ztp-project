@@ -10,7 +10,7 @@ class DeviceInfo(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True,index=True)
     # mac = Column(String, unique=True, nullable=False)
     mac : Mapped[str] = mapped_column(autoincrement=False, index=True, unique=True, nullable=False)
-    ip_address: Mapped[str] = mapped_column(autoincrement=False, index=True, unique=True, nullable=False)
+    ip_address: Mapped[str] = mapped_column(autoincrement=False, index=True, unique=False, nullable=False)
     device_type: Mapped[str] = mapped_column(autoincrement=False, unique=False, nullable=False)
     os_type:Mapped[str] =  mapped_column(autoincrement=False, unique=False, nullable=False)
     status : Mapped[str] = mapped_column(autoincrement=False, unique=False, nullable=False)
