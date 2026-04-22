@@ -3,31 +3,21 @@
   hosts: all
   gather_facts: no
   tasks:
-    # ==========================================
-    # 1. 配置物理接口基础信息 (描述)
-    # ==========================================
+    # 1. config int desc
     - name: int_desc
-      vyos.vyos.vyos_interfaces:
-        config:
-          - name: "{{ item.name }}"
-            description: "{{ item.description | default(omit) }}"
-        state: merged
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ item.name }} description '{{ item.description }}'
+        match: line
       loop: "{{ interfaces | default([]) }}"
       when: item.description is defined
 
-    # ==========================================
-    # 2. 配置接口 IP 地址
-    # ==========================================
     - name: int_addr
-      vyos.vyos.vyos_l3_interfaces:
-        config:
-          - name: "{{ item.name }}"
-            ipv4:
-              - address: "{{ item.address }}"
-        state: merged
-      # 恢复成最普通的循环，彻底告别 subelements
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ item.name }} address '{{ item.address }}'
+        match: line
       loop: "{{ interfaces | default([]) }}"
-      # 核心防护：只有在 JSON 里传了 address 字段的接口，才会执行这个任务
       when: item.address is defined
     # ==========================================
     # 3. 按需配置 OSPF (只针对带有 ospf 字段的接口)
@@ -68,3 +58,11 @@
       loop: "{{ dhcp_servers | default([]) }}"
       # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
       when: dhcp_servers | default([]) | length > 0
+
+    - name: commit
+      vyos.vyos.vyos_config:
+        commit: yes
+
+    - name: save config
+      vyos.vyos.vyos_config:
+        save: yes
