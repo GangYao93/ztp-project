@@ -1,0 +1,81 @@
+---
+- name: dynamic_vyos
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    # ==========================================
+    # 1. 生成所有配置命令（核心改造点）
+    # ==========================================
+    - name: 构建配置命令列表
+      set_fact:
+        vyos_commands: []
+
+    # ---------- 接口描述 ----------
+    - name: 生成接口描述命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + ['set interfaces ethernet ' ~ item.name ~ ' description ' ~ item.description] }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.description is defined
+
+    # ---------- 接口 IP ----------
+    - name: 生成接口 IP 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + ['set interfaces ethernet ' ~ item.name ~ ' address ' ~ item.address] }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.address is defined
+
+    # ---------- OSPF ----------
+    - name: 生成 OSPF 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + ['set protocols ospf area ' ~ item.0.area ~ ' network ' ~ item.1] }}"
+      loop: "{{ ospf_areas | default([]) | subelements('networks', skip_missing=True) }}"
+      when: ospf_areas | default([]) | length > 0
+
+    # ---------- VRRP ----------
+    - name: 生成 VRRP 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + [
+          'set interfaces ethernet ' ~ item.name ~ ' vrrp vrrp-group ' ~ item.vrrp.group ~ ' virtual-address ' ~ item.vrrp.virtual_address,
+          'set interfaces ethernet ' ~ item.name ~ ' vrrp vrrp-group ' ~ item.vrrp.group ~ ' priority ' ~ item.vrrp.priority
+        ] }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.vrrp is defined
+
+    # ---------- DHCP ----------
+    - name: 生成 DHCP 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + [
+          'set service dhcp-server shared-network-name ' ~ item.pool_name ~ ' subnet ' ~ item.subnet ~ ' default-router ' ~ item.gateway,
+          'set service dhcp-server shared-network-name ' ~ item.pool_name ~ ' subnet ' ~ item.subnet ~ ' start ' ~ item.start_ip ~ ' stop ' ~ item.end_ip,
+          'set service dhcp-server shared-network-name ' ~ item.pool_name ~ ' subnet ' ~ item.subnet ~ ' name-server ' ~ item.dns_servers[0]
+        ] }}"
+      loop: "{{ dhcp_servers | default([]) }}"
+      when: dhcp_servers | default([]) | length > 0
+
+    # ==========================================
+    # 2. DEBUG（强烈建议保留）
+    # ==========================================
+    - name: 打印最终命令（调试用）
+      debug:
+        var: vyos_commands
+
+    # ==========================================
+    # 3. 一次性下发（关键！）
+    # ==========================================
+    - name: 应用所有配置
+      vyos.vyos.vyos_config:
+        lines: "{{ vyos_commands }}"
+        match: line
+
+    # ==========================================
+    # 4. commit + save
+    # ==========================================
+    - name: commit
+      vyos.vyos.vyos_config:
+        commit: yes
+
+    - name: save config
+      vyos.vyos.vyos_config:
+        save: yes
