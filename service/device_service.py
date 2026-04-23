@@ -104,7 +104,7 @@ async def ansible_test(mac: str, ip_address: str):
     if not conf:
         return Response.fail(f"{mac} not registered")
     base_dir = Path(__file__).resolve().parent.parent
-    playbook_name = "rawtest.yml"
+    playbook_name = "test_playbook.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
     r = ansible_runner.run(
