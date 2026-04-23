@@ -78,7 +78,7 @@ data = {
             }
         ],
         "dhcp_relay": {
-            "server": [
+            "servers": [
                 "192.168.12.1",
             ],
             "interfaces": [
@@ -111,7 +111,7 @@ data = {
             }
         ],
         "dhcp_relay": {
-            "server": [
+            "servers": [
                 "192.168.12.1",
             ],
             "interfaces": [
