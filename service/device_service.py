@@ -7,6 +7,7 @@ from VO.DeviceVO import DeviceRegister
 from entity.device_info import DeviceInfo
 import logging
 import ansible_runner
+import tempfile
 
 log = logging.getLogger("device_service")
 
@@ -150,26 +151,27 @@ async def ansible_test(mac: str, ip_address: str):
     playbook_name = "test_playbook.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
-    r = ansible_runner.run(
-        private_data_dir=str(base_dir),
-        playbook=str(playbook_path),
-        inventory={
-            "all": {
-                "hosts": {
-                    "vyos1": {
-                        "ansible_host": ip_address
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        r = ansible_runner.run(
+            private_data_dir=str(tmp_dir),
+            playbook=str(playbook_path),
+            inventory={
+                "all": {
+                    "hosts": {
+                        "vyos1": {
+                            "ansible_host": ip_address
+                        }
                     }
                 }
+            },
+            extravars={
+                "ansible_user": "vyos",
+                "ansible_ssh_pass": "vyos",
+                "ansible_connection": "network_cli",
+                "ansible_network_os": "vyos.vyos.vyos",
+                **conf
             }
-        },
-        extravars={
-            "ansible_user": "vyos",
-            "ansible_ssh_pass": "vyos",
-            "ansible_connection": "network_cli",
-            "ansible_network_os": "vyos.vyos.vyos",
-            **conf
-        }
-    )
-    if r.rc != 0:
-        return Response.fail(r.stderr)
-    return Response.success(r.stdout)
+        )
+        if r.rc != 0:
+            return Response.fail(r.stderr)
+        return Response.success(r.stdout)
