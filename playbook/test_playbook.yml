@@ -61,6 +61,7 @@
     - name: 配置 DHCP Server
       vyos.vyos.vyos_config:
         lines:
+          - set service dhcp-server listen-address {{ item.listen_ip }}
           - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} subnet-id {{ item.id }}
           - set service dhcp-server shared-network-name {{ item.pool_name }} option default-router {{ item.gateway }}
           - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 start {{ item.start_ip }}
