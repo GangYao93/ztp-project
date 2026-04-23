@@ -8,7 +8,6 @@
       vyos.vyos.vyos_config:
         lines:
           - set interfaces ethernet {{ item.name }} description '{{ item.description }}'
-        match: line
       loop: "{{ interfaces | default([]) }}"
       when: item.description is defined
 
@@ -16,7 +15,6 @@
       vyos.vyos.vyos_config:
         lines:
           - set interfaces ethernet {{ item.name }} address '{{ item.address }}'
-        match: line
       loop: "{{ interfaces | default([]) }}"
       when: item.address is defined
     # ==========================================
@@ -26,7 +24,6 @@
       vyos.vyos.vyos_config:
         lines:
           - set protocols ospf area {{ item.0.area }} network '{{ item.1 }}'
-        match: line
       # subelements 会把 [{area: "0", networks: ["1.1.1.0/24", "2.2.2.0/24"]}]
       # 拆分成 (area:0, 1.1.1.0/24) 和 (area:0, 2.2.2.0/24) 两次循环
       loop: "{{ ospf_areas | default([]) | subelements('networks', skip_missing=True) }}"
@@ -40,7 +37,6 @@
         lines:
           - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.vrrp.group }} virtual-address '{{ item.vrrp.virtual_address }}'
           - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.vrrp.group }} priority {{ item.vrrp.priority }}
-        match: line
       loop: "{{ interfaces | default([]) }}"
       # 核心逻辑：只有该接口的 JSON 里包含 vrrp 字段，才执行此命令
       when: item.vrrp is defined
@@ -54,7 +50,6 @@
           - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} default-router '{{ item.gateway }}'
           - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} start {{ item.start_ip }} stop {{ item.end_ip }}
           - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
-        match: line
       loop: "{{ dhcp_servers | default([]) }}"
       # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
       when: dhcp_servers | default([]) | length > 0

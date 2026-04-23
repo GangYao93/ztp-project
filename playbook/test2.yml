@@ -67,7 +67,6 @@
     - name: 应用所有配置、提交并保存
       vyos.vyos.vyos_config:
         lines: "{{ vyos_commands }}"
-        match: line  # 根据当前配置对比，只下发差异项
         save: yes    # 执行 commit 并 save，一步到位
       # 增加超时时间，防止 commit 过慢导致连接断开遗留下面的僵尸进程
       vars:

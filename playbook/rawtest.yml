@@ -8,7 +8,7 @@
       vyos.vyos.vyos_config:
         lines:
           - set interfaces ethernet eth1 address 192.168.12.1/24
-          - set interfaces ethernet eth1 address 192.168.13.1/24
+          - set interfaces ethernet eth2 address 192.168.13.1/24
           - set protocols ospf area 0 network 192.168.12.0/24
           - set protocols ospf area 0 network 192.168.13.0/24
         save: yes
