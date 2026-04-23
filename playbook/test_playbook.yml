@@ -70,7 +70,7 @@
         match: line
       loop: "{{ dhcp_servers | default([]) }}"
       # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
-      when: dhcp_servers | default([]) | length > 0
+      when: dhcp_servers is defined
 
     - name: 配置 dhcp relay server
       vyos.vyos.vyos_config:
