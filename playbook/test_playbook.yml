@@ -63,7 +63,8 @@
         lines:
           - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} subnet-id {{ item.id }}
           - set service dhcp-server shared-network-name {{ item.pool_name }} option default-router {{ item.gateway }}
-#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} start {{ item.start_ip }} stop {{ item.end_ip }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 start {{ item.start_ip }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 stop {{ item.end_ip }}
 #          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
         match: line
       loop: "{{ dhcp_servers | default([]) }}"
