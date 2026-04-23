@@ -104,7 +104,7 @@ async def ansible_test(mac: str, ip_address: str):
     if not conf:
         return Response.fail(f"{mac} not registered")
     base_dir = Path(__file__).resolve().parent.parent
-    playbook_name = "test2.yml"
+    playbook_name = "rawtest.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
     r = ansible_runner.run(
@@ -120,11 +120,10 @@ async def ansible_test(mac: str, ip_address: str):
             }
         },
         extravars={
-            "ansible_user": "admin",
-            "ansible_ssh_pass": "password",
+            "ansible_user": "vyos",
+            "ansible_ssh_pass": "vyos",
             "ansible_connection": "network_cli",
             "ansible_network_os": "vyos.vyos.vyos",
-            "vlan_desc": "USER_VLAN",
             **conf
         }
     )

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import ansible_runner
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from VO.DeviceVO import DeviceRegister
@@ -24,6 +24,7 @@ async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get
     # if not device_info.id:
     #     return Response.fail()
     await device_service.ansible_test(device.mac,device.ip_address)
+    # BackgroundTasks.add_task(device_service.ansible_test, device.mac, device.ip_address)
     return Response.success(device_info)
 
 
