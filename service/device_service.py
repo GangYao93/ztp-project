@@ -21,15 +21,6 @@ data = {
                 "name": "eth2",
                 "address": "192.168.13.1/24"
             }
-        ],
-        "ospf_areas": [
-            {
-                "area": "0",
-                "networks": [
-                    "192.168.12.0/24",
-                    "192.168.13.0/24"
-                ]
-            }
         ]
     },
     "0c:e7:2f:0d:00:00": {
@@ -47,7 +38,7 @@ data = {
             {
                 "area": "0",
                 "networks": [
-                    "192.168.12.0/24"
+                    "192.168.12.0/24",
                     "192.168.23.0/24"
                 ]
             }
@@ -68,7 +59,7 @@ data = {
             {
                 "area": "0",
                 "networks": [
-                    "192.168.23.0/24"
+                    "192.168.23.0/24",
                     "192.168.13.0/24"
                 ]
             }
@@ -104,7 +95,7 @@ async def ansible_test(mac: str, ip_address: str):
     if not conf:
         return Response.fail(f"{mac} not registered")
     base_dir = Path(__file__).resolve().parent.parent
-    playbook_name = "test111.yml"
+    playbook_name = "test2.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
     r = ansible_runner.run(

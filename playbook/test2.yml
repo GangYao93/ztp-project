@@ -1,0 +1,82 @@
+---
+- name: dynamic_vyos
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    # ==========================================
+    # 1. 生成所有配置命令（保持你优秀的动态生成逻辑）
+    # ==========================================
+    - name: 构建配置命令列表
+      set_fact:
+        vyos_commands: []
+
+    # ---------- 接口描述 ----------
+    - name: 生成接口描述命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + ['set interfaces ethernet ' ~ item.name ~ ' description ' ~ item.description] }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.description is defined
+
+    # ---------- 接口 IP ----------
+    - name: 生成接口 IP 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + ['set interfaces ethernet ' ~ item.name ~ ' address ' ~ item.address] }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.address is defined
+
+    # ---------- OSPF ----------
+    - name: 生成 OSPF 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + ['set protocols ospf area ' ~ item.0.area ~ ' network ' ~ item.1] }}"
+      loop: "{{ ospf_areas | default([]) | subelements('networks', skip_missing=True) }}"
+      when: ospf_areas | default([]) | length > 0
+
+    # ---------- VRRP ----------
+    - name: 生成 VRRP 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + [
+          'set interfaces ethernet ' ~ item.name ~ ' vrrp vrrp-group ' ~ item.vrrp.group ~ ' virtual-address ' ~ item.vrrp.virtual_address,
+          'set interfaces ethernet ' ~ item.name ~ ' vrrp vrrp-group ' ~ item.vrrp.group ~ ' priority ' ~ item.vrrp.priority
+        ] }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.vrrp is defined
+
+    # ---------- DHCP ----------
+    - name: 生成 DHCP 命令
+      set_fact:
+        vyos_commands: "{{ vyos_commands + [
+          'set service dhcp-server shared-network-name ' ~ item.pool_name ~ ' subnet ' ~ item.subnet ~ ' default-router ' ~ item.gateway,
+          'set service dhcp-server shared-network-name ' ~ item.pool_name ~ ' subnet ' ~ item.subnet ~ ' start ' ~ item.start_ip ~ ' stop ' ~ item.end_ip,
+          'set service dhcp-server shared-network-name ' ~ item.pool_name ~ ' subnet ' ~ item.subnet ~ ' name-server ' ~ item.dns_servers[0]
+        ] }}"
+      loop: "{{ dhcp_servers | default([]) }}"
+      when: dhcp_servers | default([]) | length > 0
+
+    # ==========================================
+    # 2. DEBUG（查看生成的命令）
+    # ==========================================
+    - name: 打印最终命令（调试用）
+      debug:
+        var: vyos_commands
+
+    # ==========================================
+    # 3. 核心修改：一次性下发、提交并保存（避免会话锁死）
+    # ==========================================
+    - name: 应用所有配置、提交并保存
+      vyos.vyos.vyos_config:
+        lines: "{{ vyos_commands }}"
+        match: line  # 根据当前配置对比，只下发差异项
+        save: yes    # 执行 commit 并 save，一步到位
+      # 增加超时时间，防止 commit 过慢导致连接断开遗留下面的僵尸进程
+      vars:
+        ansible_command_timeout: 60
+      register: config_result
+
+    # ==========================================
+    # 4. 打印配置下发结果
+    # ==========================================
+    - name: 显示配置执行结果
+      debug:
+        var: config_result
