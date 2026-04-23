@@ -28,9 +28,9 @@ async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get
 
 
 @router.get("/test")
-async def test():
+async def test(ip: str = Path()):
     base_dir = Path(__file__).resolve().parent.parent
-    playbook_name = "test_playbook.yml"
+    playbook_name = "rawtest.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
     test_json = {
@@ -62,7 +62,7 @@ async def test():
             "all": {
                 "hosts": {
                     "vyos1": {
-                        "ansible_host": "10.10.0.21"
+                        "ansible_host": ip
                     }
                 }
             }
@@ -72,7 +72,6 @@ async def test():
             "ansible_ssh_pass": "password",
             "ansible_connection": "network_cli",
             "ansible_network_os": "vyos.vyos.vyos",
-            "vlan_desc": "USER_VLAN",
             **test_json
         }
     )
