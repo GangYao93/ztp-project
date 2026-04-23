@@ -61,7 +61,7 @@ async def test(ip: str = Path()):
         inventory={
             "all": {
                 "hosts": {
-                    "vyos1": {
+                    "vyos_routers": {
                         "ansible_host": ip
                     }
                 }
