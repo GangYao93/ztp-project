@@ -30,6 +30,17 @@ data = {
                     "192.168.13.0/24"
                 ]
             }
+        ],
+        "dhcp_servers":[
+            {
+                "pool_name": "pool1",
+                "subnet": "192.168.100.0/24",
+                "id": "1",
+                "gateway": "192.168.100.1",
+                "dhcp_server": "10.10.0.2",
+                "start": "192.168.100.10",
+                "end": "192.168.100.254",
+            }
         ]
     },
     "0c:e7:2f:0d:00:00": {
@@ -51,7 +62,15 @@ data = {
                     "192.168.23.0/24"
                 ]
             }
-        ]
+        ],
+        "dhcp_relay": {
+            "server": [
+                "192.168.13.1",
+            ],
+            "interfaces": [
+                "eth3"
+            ]
+        }
     },
     "0c:21:dc:c6:00:00": {
         "interfaces": [
@@ -72,7 +91,15 @@ data = {
                     "192.168.13.0/24"
                 ]
             }
-        ]
+        ],
+        "dhcp_relay": {
+            "server": [
+                "192.168.13.1",
+            ],
+            "interfaces": [
+                "eth3"
+            ]
+        }
     }
 }
 
@@ -99,7 +126,6 @@ async def register_device(device: DeviceRegister, db: AsyncSession):
 
 
 async def ansible_test(mac: str, ip_address: str):
-
     conf = data[mac]
     if not conf:
         return Response.fail(f"{mac} not registered")

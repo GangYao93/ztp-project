@@ -1,0 +1,55 @@
+---
+- name: SONiC 动态 L2 网络配置 (VLAN & Switchport)
+  hosts: all
+  gather_facts: no
+  tasks:
+    # ==========================================
+    # 1. 创建全局 VLAN 实例
+    # ==========================================
+    - name: create_global_vlans
+      dellemc.enterprise_sonic.sonic_vlans:
+        config:
+          - vlan_id: "{{ item.vlan_id }}"
+            name: "{{ item.name | default('VLAN_' ~ item.vlan_id) }}"
+            admin_status: up
+        state: merged
+      loop: "{{ vlans | default([]) }}"
+      when: vlans is defined and vlans | length > 0
+
+    # ==========================================
+    # 2. 配置 Access 接口 (只针对 mode 为 access 的接口)
+    # ==========================================
+    - name: config_access_ports
+      dellemc.enterprise_sonic.sonic_vlan_interfaces:
+        config:
+          - name: "{{ item.name }}"
+            vlan_members:
+              - vlan_id: "{{ item.vlan }}"
+                tagging_mode: untagged  # Untagged 即代表 Access
+        state: merged
+      loop: "{{ interfaces | default([]) }}"
+      # 核心防护：只有明确声明为 access 且带有 vlan 字段的才执行
+      when: item.mode | default('') == 'access' and item.vlan is defined
+
+    # ==========================================
+    # 3. 配置 Trunk 接口及允许的 VLAN (Allowed VLANs)
+    # ==========================================
+    - name: config_trunk_allowed_vlans
+      dellemc.enterprise_sonic.sonic_vlan_interfaces:
+        config:
+          - name: "{{ item.0.name }}"
+            vlan_members:
+              - vlan_id: "{{ item.1 }}"
+                tagging_mode: tagged    # Tagged 即代表 Trunk 允许通过
+        state: merged
+      # 使用 subelements 将 [10, 20] 拆分为两次独立的执行
+      loop: "{{ interfaces | default([]) | subelements('allowed_vlans', skip_missing=True) }}"
+      # 核心防护：只有明确声明为 trunk 的接口才执行
+      when: item.0.mode | default('') == 'trunk'
+
+    # ==========================================
+    # 4. 保存配置到 ConfigDB
+    # ==========================================
+    - name: save_sonic_config
+      dellemc.enterprise_sonic.sonic_config:
+        save: yes

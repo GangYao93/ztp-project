@@ -61,10 +61,26 @@
     - name: 配置 DHCP Server
       vyos.vyos.vyos_config:
         lines:
-          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} default-router '{{ item.gateway }}'
-          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} start {{ item.start_ip }} stop {{ item.end_ip }}
-          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} subnet-id {{ item.id }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} option default-router {{ item.gateway }}
+#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} start {{ item.start_ip }} stop {{ item.end_ip }}
+#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
         match: line
       loop: "{{ dhcp_servers | default([]) }}"
       # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
       when: dhcp_servers | default([]) | length > 0
+
+    - name: 配置 dhcp relay server
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dhcp-relay server {{ item }}
+      loop: "{{ (dhcp_relay | default({})).servers | default([]) }}"
+#      when: (dhcp_relays | default({})).servers | default([]) | length > 0
+
+    - name: 配置 dhcp relay interface
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dhcp-relay interface {{ item }}
+      loop: "{{ (dhcp_relay | default({})).interfaces | default([]) }}"
+#      when: (dhcp_relays | default({})).servers | default([]) length > 0
+

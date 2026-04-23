@@ -4,17 +4,23 @@
 import subprocess
 import sys
 import logging
+import json
+import urllib.request
 
 # ==========================================
+# 变量配置区
 # ==========================================
+CONTROLLER_URL = "http://10.10.0.2:8000/device/register"
+NEW_USER = "admin"
+NEW_PASS = "password"
+
 logging.basicConfig(
     level=logging.INFO,
     format='ZTP-BOOTSTRAP: %(levelname)s - %(message)s'
 )
 
 
-def run_command(cmd):
-
+def run_command(cmd, ignore_error=False):
     logging.info("running config: {}".format(cmd))
     try:
         process = subprocess.Popen(
@@ -27,13 +33,17 @@ def run_command(cmd):
         err_str = stderr_data.decode('utf-8').strip() if isinstance(stderr_data, bytes) else stderr_data.strip()
 
         if process.returncode != 0:
-            logging.error("running failed error: {}".format(cmd, err_str))
-            sys.exit(1)
-
+            if not ignore_error:
+                logging.error("running failed error: {} - {}".format(cmd, err_str))
+                sys.exit(1)
+            else:
+                logging.warning("command returned non-zero (ignored): {} - {}".format(cmd, err_str))
         return out_str
     except Exception as e:
         logging.error("sys error: {}".format(str(e)))
-        sys.exit(1)
+        if not ignore_error:
+            sys.exit(1)
+        return ""
 
 
 def get_mac_address(interface="eth0"):
@@ -56,21 +66,58 @@ def get_ip_address(interface="eth0"):
     return "UNKNOWN_IP"
 
 
-def main():
-    logging.info("--- start to config SoNIC ---")
+def register_to_controller(ip, mac):
+    logging.info("ready to register to Controller...")
 
+    # 构造 JSON Payload，适配控制器的数据结构
+    payload = {
+        "ip_address": ip,
+        "mac": mac,
+        "os_type": "sonic",
+        "status": "register",
+        "device_type": "switch"  # SONiC 作为交换机注册
+    }
+
+    logging.info("-> payload: {}".format(json.dumps(payload)))
+
+    # 使用 urllib 原生发送 POST 请求
+    req = urllib.request.Request(CONTROLLER_URL)
+    req.add_header('Content-Type', 'application/json')
+    jsondata = json.dumps(payload).encode('utf-8')
+
+    try:
+        response = urllib.request.urlopen(req, jsondata, timeout=10)
+        res_body = response.read().decode('utf-8')
+        logging.info("Controller response: {}".format(res_body))
+    except Exception as e:
+        logging.error("Registration request failed: {}".format(str(e)))
+
+
+def main():
+    logging.info("--- start to config SONiC ---")
+
+    # 1. 获取管理口信息
     mgmt_mac = get_mac_address("eth0")
     mgmt_ip = get_ip_address("eth0")
     logging.info("ip & mac-> MAC: {}, IP: {}".format(mgmt_mac, mgmt_ip))
 
-    vlans_to_create = [100, 200, 300]
-    for vlan_id in vlans_to_create:
-        run_command("config vlan add {}".format(vlan_id))
-        logging.info("VLAN {} created".format(vlan_id))
+    # 2. 配置 SSH 用户与密码
+    logging.info("-> creating/updating SSH account: {} ...".format(NEW_USER))
 
+    # SONiC 官方创建用户的 CLI 命令 (赋予 admin 角色)
+    # 使用 ignore_error=True 是因为如果 admin 用户已存在，该命令会报错，我们忽略即可
+    run_command("config user add {} -p {} -r admin".format(NEW_USER, NEW_PASS), ignore_error=True)
+
+    # 强制通过底层的 Linux 命令更新密码，确保无论用户是否已存在，密码都能设置成功
+    run_command("echo '{}:{}' | chpasswd".format(NEW_USER, NEW_PASS))
+
+    # 3. 保存配置
     logging.info("saving config to config_db.json...")
     run_command("config save -y")
     logging.info("config saved")
+
+    # 4. 向 FastAPI 控制器注册
+    register_to_controller(mgmt_ip, mgmt_mac)
 
     logging.info("--- ZTP success---")
     sys.exit(0)
@@ -78,4 +125,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
