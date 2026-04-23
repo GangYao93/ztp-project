@@ -36,11 +36,11 @@ data = {
         "interfaces": [
             {
                 "name": "eth1",
-                "address": "192.168.12.1/24"
+                "address": "192.168.12.2/24"
             },
             {
                 "name": "eth2",
-                "address": "192.168.23.1/24"
+                "address": "192.168.23.2/24"
             }
         ],
         "ospf_areas": [
@@ -57,11 +57,11 @@ data = {
         "interfaces": [
             {
                 "name": "eth1",
-                "address": "192.168.13.1/24"
+                "address": "192.168.13.3/24"
             },
             {
                 "name": "eth2",
-                "address": "192.168.23.1/24"
+                "address": "192.168.23.3/24"
             }
         ],
         "ospf_areas": [
