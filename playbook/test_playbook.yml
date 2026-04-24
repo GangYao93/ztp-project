@@ -79,15 +79,16 @@
       loop: "{{ (dhcp_relay | default({})).servers | default([]) }}"
 #      when: (dhcp_relays | default({})).servers | default([]) | length > 0
 
-    - name: 配置 dhcp relay listen interface
-      vyos.vyos.vyos_config:
-        lines:
-          - set service dhcp-relay  listen-interface {{ item }}
-      loop: "{{ (dhcp_relay | default({})).listen_interfaces | default([]) }}"
-    - name: 配置 dhcp relay interface
+    - name: 配置 dhcp relay upstream interface
       vyos.vyos.vyos_config:
         lines:
           - set service dhcp-relay upstream-interface {{ item }}
       loop: "{{ (dhcp_relay | default({})).upstream_interfaces | default([]) }}"
 #      when: (dhcp_relays | default({})).servers | default([]) length > 0
+
+    - name: 配置 dhcp relay listen interface
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dhcp-relay  listen-interface {{ item }}
+      loop: "{{ (dhcp_relay | default({})).listen_interfaces | default([]) }}"
 
