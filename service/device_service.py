@@ -82,10 +82,8 @@ data = {
             "servers": [
                 "192.168.12.1",
             ],
-            "listen_interfaces": [
-                "eth3"
-            ],
-            "upstream_interfaces": [
+            "interfaces": [
+                "eth3",
                 "eth1"
             ]
         }
@@ -119,10 +117,8 @@ data = {
             "servers": [
                 "192.168.13.1",
             ],
-            "listen_interfaces": [
-                "eth3"
-            ],
-            "upstream_interfaces": [
+            "interfaces": [
+                "eth3",
                 "eth1"
             ]
         }
