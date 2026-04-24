@@ -86,16 +86,19 @@
 #      loop: "{{ (dhcp_relay | default({})).interfaces | default([]) }}"
 ##      when: (dhcp_relays | default({})).servers | default([]) length > 0
 
-    - name: 配置 dhcp relay upstream 与 listen interfaces
+    - name: 完整配置 dhcp relay (原子操作，一次 commit)
       vyos.vyos.vyos_config:
-        lines: "{{ upstream_lines + listen_lines }}"
+        lines: "{{ server_lines + upstream_lines + listen_lines }}"
       vars:
-        # 使用 map 和 regex_replace 在每个接口名称前加上具体的配置命令
+        # 将 IP 或接口名称转换为完整的配置命令
         server_lines: "{{ (dhcp_relay | default({})).servers | default([]) | map('regex_replace', '^', 'set service dhcp-relay server ') | list }}"
         upstream_lines: "{{ (dhcp_relay | default({})).upstream_interfaces | default([]) | map('regex_replace', '^', 'set service dhcp-relay upstream-interface ') | list }}"
         listen_lines: "{{ (dhcp_relay | default({})).listen_interfaces | default([]) | map('regex_replace', '^', 'set service dhcp-relay listen-interface ') | list }}"
-      # 当两个列表合并后长度大于 0 时才执行此 Task，避免下发空配置
-      when: (upstream_lines | length > 0) and (listen_lines | length > 0)
+      # 必须确保三个核心组件都有数据，才执行下发，避免下发残缺配置
+      when:
+        - server_lines | length > 0
+        - upstream_lines | length > 0
+        - listen_lines | length > 0
 
 #    - name: 配置 dhcp relay upstream interface
 #      vyos.vyos.vyos_config:
