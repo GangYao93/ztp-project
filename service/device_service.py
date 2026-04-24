@@ -47,7 +47,7 @@ data = {
                 "subnet": "192.168.200.0/24",
                 "id": "2",
                 "gateway": "192.168.200.1",
-                "listen_ip": "192.168.12.1",
+                "listen_ip": "192.168.13.1",
                 "start_ip": "192.168.200.10",
                 "end_ip": "192.168.200.254",
             }
@@ -82,8 +82,10 @@ data = {
             "servers": [
                 "192.168.12.1",
             ],
-            "interfaces": [
-                "eth3",
+            "listen_interfaces": [
+                "eth3"
+            ],
+            "upstream_interfaces": [
                 "eth1"
             ]
         }
@@ -115,10 +117,12 @@ data = {
         ],
         "dhcp_relay": {
             "servers": [
-                "192.168.12.1",
+                "192.168.13.1",
             ],
-            "interfaces": [
-                "eth3",
+            "listen_interfaces": [
+                "eth3"
+            ],
+            "upstream_interfaces": [
                 "eth1"
             ]
         }
