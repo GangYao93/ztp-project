@@ -58,19 +58,19 @@
     # ==========================================
     # 5. 按需配置 DHCP 服务器 (全局配置)
     # ==========================================
-#    - name: 配置 DHCP Server
-#      vyos.vyos.vyos_config:
-#        lines:
-#          - set service dhcp-server listen-address {{ item.listen_ip }}
-#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} subnet-id {{ item.id }}
-#          - set service dhcp-server shared-network-name {{ item.pool_name }} option default-router {{ item.gateway }}
-#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 start {{ item.start_ip }}
-#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 stop {{ item.end_ip }}
-##          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
-#        match: line
-#      loop: "{{ dhcp_servers | default([]) }}"
-#      # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
-#      when: dhcp_servers is defined
+    - name: 配置 DHCP Server
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dhcp-server listen-address {{ item.listen_ip }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} subnet-id {{ item.id }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} option default-router {{ item.gateway }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 start {{ item.start_ip }}
+          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} range 1 stop {{ item.end_ip }}
+#          - set service dhcp-server shared-network-name {{ item.pool_name }} subnet {{ item.subnet }} name-server '{{ item.dns_servers[0] }}'
+        match: line
+      loop: "{{ dhcp_servers | default([]) }}"
+      # 核心逻辑：只有 dhcp_servers 列表有数据时才执行
+      when: dhcp_servers is defined
 
 #    - name: 配置 dhcp relay server
 #      vyos.vyos.vyos_config:
