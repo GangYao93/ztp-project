@@ -84,6 +84,12 @@
         state: merged
       loop: "{{ access_ports | default([]) }}"
 
+    - name: Disable ZeroTouch to allow saving
+      arista.eos.eos_config:
+        lines:
+          - zerotouch disable
+      # 忽略错误，因为如果 ZTP 已经禁用了，这条命令可能会报错
+      ignore_errors: yes
     # ==================================================
     # 5. 保存配置
     # ==================================================
