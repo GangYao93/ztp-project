@@ -1,6 +1,6 @@
 ---
 - name: EOS L2 Hybrid (Complete Dynamic Style)
-  hosts: veos_switches
+  hosts: all
   gather_facts: no
   become: yes
   become_method: enable
