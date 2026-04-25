@@ -17,8 +17,7 @@ COPY requirements.txt ./
 
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && ansible-galaxy collection install vyos.vyos \
-    && ansible-galaxy collection install git+https://github.com/ansible-collections/community.sonic.git
+    && ansible-galaxy collection install vyos.vyos
 
 COPY . .
 
