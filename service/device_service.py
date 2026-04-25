@@ -9,7 +9,10 @@ import logging
 import ansible_runner
 import tempfile
 
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger("device_service")
+# log.format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 data = {
     "0c:67:0d:13:00:00": {
@@ -32,7 +35,7 @@ data = {
                 ]
             }
         ],
-        "dhcp_servers":[
+        "dhcp_servers": [
             {
                 "pool_name": "pool1",
                 "subnet": "192.168.100.0/24",
@@ -151,14 +154,38 @@ async def register_device(device: DeviceRegister, db: AsyncSession):
         return Response.fail({"error": str(e)})
 
 
-async def ansible_test(mac: str, ip_address: str):
+async def ansible_test(mac: str, ip_address: str, device_type: str):
     conf = data[mac]
     if not conf:
         return Response.fail(f"{mac} not registered")
     base_dir = Path(__file__).resolve().parent.parent
-    playbook_name = "test_playbook.yml"
+
+    playbook_name = "test_playbook.yml" if device_type == "router" else "test_vEOS.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
+    env = {}
+    if device_type == "router":
+        env = {
+            "ansible_user": "vyos" if device_type == "router" else "ansible",
+            "ansible_ssh_pass": "vyos" if device_type == "router" else "ansible",
+            "ansible_connection": "network_cli" if device_type == "router" else "localhost",
+            "ansible_network_os": "vyos.vyos.vyos" if device_type == "router" else "dellemc.enterprise_sonic.sonic",
+            **conf
+        }
+    elif device_type == "switch":
+        env = {
+            "ansible_user": "ansible",
+            "ansible_ssh_pass":  "ansible",
+            "ansible_connection": "httpapi",
+            "ansible_network_os": "arista.eos.eos",
+            "ansible_httpapi_use_ssl": "yes",
+            "ansible_httpapi_validate_certs": "no",
+            "ansible_become": "yes",
+            "ansible_become_method": "enable",
+            **conf
+        }
+    log.info(f"Playbook: {playbook_name}")
+    log.info(f"env: {env}")
     with tempfile.TemporaryDirectory() as tmp_dir:
         r = ansible_runner.run(
             private_data_dir=str(tmp_dir),
@@ -166,19 +193,13 @@ async def ansible_test(mac: str, ip_address: str):
             inventory={
                 "all": {
                     "hosts": {
-                        "vyos1": {
+                        "device": {
                             "ansible_host": ip_address
                         }
                     }
                 }
             },
-            extravars={
-                "ansible_user": "vyos",
-                "ansible_ssh_pass": "vyos",
-                "ansible_connection": "network_cli",
-                "ansible_network_os": "vyos.vyos.vyos",
-                **conf
-            }
+            extravars=env
         )
         if r.rc != 0:
             return Response.fail(r.stderr)

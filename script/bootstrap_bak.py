@@ -56,12 +56,41 @@ def get_ip_address(interface="eth0"):
     return "UNKNOWN_IP"
 
 
+def user_exists(username):
+    try:
+        with open('/etc/passwd', 'r') as f:
+            for line in f:
+                if line.startswith("{}:".format(username)):
+                    return True
+        return False
+    except Exception as e:
+        logging.error("Failed to check /etc/passwd: {}".format(str(e)))
+        return False
+
+
 def main():
     logging.info("--- start to config SoNIC ---")
 
     mgmt_mac = get_mac_address("eth0")
     mgmt_ip = get_ip_address("eth0")
     logging.info("ip & mac-> MAC: {}, IP: {}".format(mgmt_mac, mgmt_ip))
+
+    ansible_user = "ansible"
+    ansible_pass = "YourPaSsWord"
+
+    if not user_exists(ansible_user):
+        logging.info("Creating new user '{}' for automation...".format(ansible_user))
+        # -m 创建家目录, -s 指定默认 shell 为 sonic-cli
+        run_command("useradd -m -s /usr/bin/sonic-cli {}".format(ansible_user))
+
+        # 使用管道传递并修改密码
+        run_command("echo '{}:{}' | chpasswd".format(ansible_user, ansible_pass))
+
+        # 将新用户加入 sudo 组，确保其有权限执行底层的配置保存命令
+        run_command("usermod -aG sudo {}".format(ansible_user))
+        logging.info("User '{}' created successfully.".format(ansible_user))
+    else:
+        logging.info("User '{}' already exists, skipping creation.".format(ansible_user))
 
     vlans_to_create = [100, 200, 300]
     for vlan_id in vlans_to_create:

@@ -66,6 +66,8 @@ def get_ip_address(interface="eth0"):
     return "UNKNOWN_IP"
 
 
+
+
 def register_to_controller(ip, mac):
     logging.info("ready to register to Controller...")
 
@@ -81,14 +83,22 @@ def register_to_controller(ip, mac):
     logging.info("-> payload: {}".format(json.dumps(payload)))
 
     # 使用 urllib 原生发送 POST 请求
-    req = urllib.request.Request(CONTROLLER_URL)
-    req.add_header('Content-Type', 'application/json')
-    jsondata = json.dumps(payload).encode('utf-8')
+    # 将字典序列化为 JSON 字节流
+    data = json.dumps(payload).encode('utf-8')
+
+    # 构造 HTTP POST 请求
+    req = urllib.request.Request(
+        url=CONTROLLER_URL,
+        data=data,
+        headers={'Content-Type': 'application/json'},
+        method='POST'
+    )
 
     try:
-        response = urllib.request.urlopen(req, jsondata, timeout=10)
-        res_body = response.read().decode('utf-8')
-        logging.info("Controller response: {}".format(res_body))
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_body = response.read().decode('utf-8')
+            status_code = response.getcode()
+            logging.info("Device registered successfully! HTTP Status: {} - Response: {}".format(status_code, res_body))
     except Exception as e:
         logging.error("Registration request failed: {}".format(str(e)))
 
