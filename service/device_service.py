@@ -9,7 +9,6 @@ import logging
 import ansible_runner
 import tempfile
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger("device_service")
 # log.format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -129,6 +128,40 @@ data = {
                 "eth1"
             ]
         }
+    },
+    "0c:18:eb:b9:00:00": {
+        "vlans": [
+            {
+                "id": "10",
+                "name": "VLAN10",
+            },
+            {
+                "id": "20",
+                "name": "VLAN20",
+            }
+        ],
+        "lags": [
+            {
+                "name": "Port-Channel10",
+                "members": [
+                    "Ethernet1",
+                    "Ethernet2"
+                ],
+                "vlans": [
+                    "10", "20"
+                ]
+            }
+        ],
+        "access_port": [
+            {
+                "name": "Ethernet3",
+                "vlan": "10"
+            },
+            {
+                "name": "Ethernet4",
+                "vlan": "20"
+            }
+        ]
     }
 }
 
@@ -175,7 +208,7 @@ async def ansible_test(mac: str, ip_address: str, device_type: str):
     elif device_type == "switch":
         env = {
             "ansible_user": "ansible",
-            "ansible_ssh_pass":  "ansible",
+            "ansible_ssh_pass": "ansible",
             "ansible_connection": "httpapi",
             "ansible_network_os": "arista.eos.eos",
             "ansible_httpapi_use_ssl": "yes",
