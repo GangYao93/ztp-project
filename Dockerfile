@@ -17,7 +17,8 @@ COPY requirements.txt ./
 
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && ansible-galaxy collection install vyos.vyos
+    && ansible-galaxy collection install vyos.vyos \
+    && ansible-galaxy collection install arista.eos
 
 COPY . .
 
