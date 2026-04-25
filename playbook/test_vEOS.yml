@@ -61,7 +61,7 @@
           - name: "{{ item.name }}"
             trunk:
               trunk_allowed_vlans:
-                - "{{ item.vlans }}"
+                - "{{ item.vlans | join(',') }}"
         state: merged
       loop: "{{ lags | default([]) }}"
 
