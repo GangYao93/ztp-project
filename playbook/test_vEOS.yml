@@ -6,6 +6,14 @@
   become_method: enable
 
   tasks:
+    - name: Wait for eAPI port 443 to be active
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 443
+        delay: 10      # 至少等 10 秒再开始检测
+        timeout: 300   # 最多等 5 分钟
+      delegate_to: localhost
+
     - name: Create VLANs
       arista.eos.eos_vlans:
         config:
