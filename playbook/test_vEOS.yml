@@ -79,9 +79,9 @@
     - name: 4. Configure Access VLANs
       arista.eos.eos_l2_interfaces:
         config:
-          - name: { { item.name } }
+          - name: "{{ item.name }}"
             access:
-              vlan: { { item.vlan } }
+              vlan: "{{ item.vlan }}"
         state: merged
       loop: "{{ access_ports | default([]) }}"
 
