@@ -10,8 +10,8 @@
       ansible.builtin.wait_for:
         host: "{{ ansible_host }}"
         port: 443
-        delay: 10      # 至少等 10 秒再开始检测
-        timeout: 300   # 最多等 5 分钟
+        delay: 60      # 至少等 10 秒再开始检测
+        timeout: 600   # 最多等 5 分钟
       delegate_to: localhost
 
     - name: Create VLANs
