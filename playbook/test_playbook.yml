@@ -49,14 +49,23 @@
       loop: "{{ ospf_areas | default([]) | subelements('networks', skip_missing=True) }}"
       when: ospf_areas | default([]) | length > 0
 
-    - name: vrrp
+    - name: vrrp_phy
       vyos.vyos.vyos_config:
         lines:
-          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.vrrp.group }} virtual-address '{{ item.vrrp.virtual_address }}'
-          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.vrrp.group }} priority {{ item.vrrp.priority }}
+          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.group }} virtual-address '{{ item.virtual_address }}'
+          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.group }} priority {{ item.priority }}
         match: line
-      loop: "{{ interfaces | default([], true) }}"
-      when: item.vrrp is defined
+      loop: "{{ vrrp_groups | default([]) }}"
+      when: item.vlan_id is not defined
+
+    - name: vrrp_sub_int
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ item.name }} vif {{ item.vlan_id }} vrrp vrrp-group {{ item.group }} virtual-address '{{ item.virtual_address }}'
+          - set interfaces ethernet {{ item.name }} vif {{ item.vlan_id }} vrrp vrrp-group {{ item.group }} priority {{ item.priority }}
+        match: line
+      loop: "{{ vrrp_groups | default([]) }}"
+      when: item.vlan_id is defined
 
 
     - name: 配置 DHCP Server

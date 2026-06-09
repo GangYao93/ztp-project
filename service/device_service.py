@@ -67,8 +67,12 @@ data = {
             }
         ],
         "sub_interfaces": [
-            {"name": "eth1", "vlan_id": "10", "address": "192.168.100.2/24"},
-            {"name": "eth1", "vlan_id": "20", "address": "192.168.200.2/24"},
+            {"name": "eth3", "vlan_id": "10", "address": "192.168.100.2/24"},
+            {"name": "eth3", "vlan_id": "20", "address": "192.168.200.2/24"},
+        ],
+        "vrrp_groups": [
+            {"name": "eth3", "group": "1", "vlan_id": "10", "address": "192.168.100.1/24", "priority": 110},
+            {"name": "eth3", "group": "1", "vlan_id": "20", "address": "192.168.200.1/24", "priority": 90},
         ],
         "ospf_areas": [
             {
@@ -85,7 +89,7 @@ data = {
                 "192.168.12.1",
             ],
             "listen_interfaces": [
-                "eth3"
+                "eth3.10","eth3.20"
             ],
             "upstream_interfaces": [
                 "eth1"
@@ -107,6 +111,14 @@ data = {
                 "address": "192.168.200.1/24"
             }
         ],
+        "sub_interfaces": [
+            {"name": "eth3", "vlan_id": "10", "address": "192.168.100.3/24"},
+            {"name": "eth3", "vlan_id": "20", "address": "192.168.200.3/24"},
+        ],
+        "vrrp_groups": [
+            {"name": "eth3", "group": "1", "vlan_id": "10", "address": "192.168.100.1/24", "priority": 90},
+            {"name": "eth3", "group": "1", "vlan_id": "20", "address": "192.168.200.1/24", "priority": 110},
+        ],
         "ospf_areas": [
             {
                 "area": "0",
@@ -122,7 +134,7 @@ data = {
                 "192.168.13.1",
             ],
             "listen_interfaces": [
-                "eth3"
+                "eth3.10", "eth3.20"
             ],
             "upstream_interfaces": [
                 "eth1"
