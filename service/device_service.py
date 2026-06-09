@@ -37,21 +37,21 @@ data = {
         "dhcp_servers": [
             {
                 "pool_name": "pool1",
-                "subnet": "192.168.100.0/24",
+                "subnet": "192.168.10.0/24",
                 "id": "1",
-                "gateway": "192.168.100.1",
+                "gateway": "192.168.10.1",
                 "listen_ip": "192.168.12.1",
-                "start_ip": "192.168.100.10",
-                "end_ip": "192.168.100.254",
+                "start_ip": "192.168.10.10",
+                "end_ip": "192.168.10.254",
             },
             {
                 "pool_name": "pool2",
-                "subnet": "192.168.200.0/24",
+                "subnet": "192.168.20.0/24",
                 "id": "2",
-                "gateway": "192.168.200.1",
+                "gateway": "192.168.20.1",
                 "listen_ip": "192.168.13.1",
-                "start_ip": "192.168.200.10",
-                "end_ip": "192.168.200.254",
+                "start_ip": "192.168.20.10",
+                "end_ip": "192.168.20.254",
             }
         ]
     },
@@ -67,12 +67,12 @@ data = {
             }
         ],
         "sub_interfaces": [
-            {"name": "eth3", "vlan_id": "10", "address": "192.168.100.2/24"},
-            {"name": "eth3", "vlan_id": "20", "address": "192.168.200.2/24"},
+            {"name": "eth3", "vlan_id": "10", "address": "192.168.10.2/24"},
+            {"name": "eth3", "vlan_id": "20", "address": "192.168.20.2/24"},
         ],
         "vrrp_groups": [
-            {"name": "eth3", "vrid": "1", "vlan_id": "10", "virtual_address": "192.168.100.1/24", "priority": 110},
-            {"name": "eth3", "vrid": "2", "vlan_id": "20", "virtual_address": "192.168.200.1/24", "priority": 90},
+            {"name": "eth3", "vrid": "1", "vlan_id": "10", "virtual_address": "192.168.10.1/24", "priority": 110},
+            {"name": "eth3", "vrid": "2", "vlan_id": "20", "virtual_address": "192.168.20.1/24", "priority": 90},
         ],
         "ospf_areas": [
             {
@@ -80,7 +80,8 @@ data = {
                 "networks": [
                     "192.168.12.0/24",
                     "192.168.23.0/24",
-                    "192.168.100.0/24"
+                    "192.168.10.0/24",
+                    "192.168.20.0/24"
                 ]
             }
         ],
@@ -89,7 +90,7 @@ data = {
                 "192.168.12.1",
             ],
             "listen_interfaces": [
-                "eth3.10","eth3.20"
+                "eth3.10", "eth3.20"
             ],
             "upstream_interfaces": [
                 "eth1"
@@ -108,16 +109,16 @@ data = {
             },
             {
                 "name": "eth3",
-                "address": "192.168.200.1/24"
+                "address": "192.168.20.1/24"
             }
         ],
         "sub_interfaces": [
-            {"name": "eth3", "vlan_id": "10", "address": "192.168.100.3/24"},
-            {"name": "eth3", "vlan_id": "20", "address": "192.168.200.3/24"},
+            {"name": "eth3", "vlan_id": "10", "address": "192.168.10.3/24"},
+            {"name": "eth3", "vlan_id": "20", "address": "192.168.20.3/24"},
         ],
         "vrrp_groups": [
-            {"name": "eth3", "vrid": "1", "vlan_id": "10", "address": "192.168.100.1/24", "priority": 90},
-            {"name": "eth3", "vrid": "2", "vlan_id": "20", "address": "192.168.200.1/24", "priority": 110},
+            {"name": "eth3", "vrid": "1", "vlan_id": "10", "address": "192.168.10.1/24", "priority": 90},
+            {"name": "eth3", "vrid": "2", "vlan_id": "20", "address": "192.168.20.1/24", "priority": 110},
         ],
         "ospf_areas": [
             {
@@ -125,7 +126,7 @@ data = {
                 "networks": [
                     "192.168.23.0/24",
                     "192.168.13.0/24",
-                    "192.168.200.0/24"
+                    "192.168.20.0/24"
                 ]
             }
         ],
@@ -156,21 +157,151 @@ data = {
             {
                 "name": "Port-Channel10",
                 "members": [
-                    "Ethernet1",
-                    "Ethernet2"
-                ],
-                "vlans": [
-                    10, 20
+                    "Ethernet2",
+                    "Ethernet3"
                 ]
             }
         ],
+        "trunk_port": [
+            {
+                "name": "Port-Channel10",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet1",
+                "vlans": [10, 20]
+            },
+        ],
         "access_port": [
             {
-                "name": "Ethernet3",
+                "name": "Ethernet7",
                 "vlan": "10"
             },
             {
-                "name": "Ethernet4",
+                "name": "Ethernet8",
+                "vlan": "20"
+            }
+        ]
+    },
+    "0c:18:eb:b8:00:00": {
+        "vlans": [
+            {
+                "id": "10",
+                "name": "VLAN10",
+            },
+            {
+                "id": "20",
+                "name": "VLAN20",
+            }
+        ],
+        "lags": [
+            {
+                "name": "Port-Channel10",
+                "members": [
+                    "Ethernet2",
+                    "Ethernet3"
+                ]
+            }
+        ],
+        "trunk_port": [
+            {
+                "name": "Port-Channel10",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet1",
+                "vlans": [10, 20]
+            },
+        ],
+        "access_port": [
+            {
+                "name": "Ethernet7",
+                "vlan": "10"
+            },
+            {
+                "name": "Ethernet8",
+                "vlan": "20"
+            }
+        ]
+    },
+    "0c:18:eb:b7:00:00": {
+        "vlans": [
+            {
+                "id": "10",
+                "name": "VLAN10",
+            },
+            {
+                "id": "20",
+                "name": "VLAN20",
+            }
+        ],
+        "lags": [
+            {
+                "name": "Port-Channel10",
+                "members": [
+                    "Ethernet2",
+                    "Ethernet3"
+                ]
+            }
+        ],
+        "trunk_port": [
+            {
+                "name": "Port-Channel10",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet1",
+                "vlans": [10, 20]
+            },
+        ],
+        "access_port": [
+            {
+                "name": "Ethernet7",
+                "vlan": "10"
+            },
+            {
+                "name": "Ethernet8",
+                "vlan": "20"
+            }
+        ]
+    },
+    "0c:18:eb:b6:00:00": {
+        "vlans": [
+            {
+                "id": "10",
+                "name": "VLAN10",
+            },
+            {
+                "id": "20",
+                "name": "VLAN20",
+            }
+        ],
+        "lags": [
+            {
+                "name": "Port-Channel10",
+                "members": [
+                    "Ethernet2",
+                    "Ethernet3"
+                ]
+            }
+        ],
+        "trunk_port": [
+            {
+                "name": "Port-Channel10",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet1",
+                "vlans": [10, 20]
+            },
+        ],
+        "access_port": [
+            {
+                "name": "Ethernet7",
+                "vlan": "10"
+            },
+            {
+                "name": "Ethernet8",
                 "vlan": "20"
             }
         ]

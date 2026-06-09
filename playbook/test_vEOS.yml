@@ -45,24 +45,24 @@
         - "{{ lags | default([]) }}"
         - members
 
-    - name: Force L2 on Port-Channel
+    - name: Force L2 on Trunk Ports
       arista.eos.eos_interfaces:
         config:
           - name: "{{ item.name }}"
             mode: layer2
         state: merged
-      loop: "{{ lags | default([]) }}"
+      loop: "{{ trunk_port | default([]) }}"
     # ==================================================
     # 3. 批量配置所有聚合口为 Trunk
     # ==================================================
-    - name: 3. Configure all Port-Channel Trunks
+    - name: 3. Configure Trunk Ports
       arista.eos.eos_l2_interfaces:
         config:
           - name: "{{ item.name }}"
             trunk:
-              trunk_allowed_vlans: "{{ item.vlans }}"
+              trunk_allowed_vlans: "{{ item.vlans | join(',') }}"
         state: merged
-      loop: "{{ lags | default([]) }}"
+      loop: "{{ trunk_port | default([]) }}"
 
     # ==================================================
     # 4. 配置 Access 端口
