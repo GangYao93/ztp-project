@@ -64,11 +64,11 @@ data = {
             {
                 "name": "eth2",
                 "address": "192.168.23.2/24"
-            },
-            {
-                "name": "eth3",
-                "address": "192.168.100.1/24"
             }
+        ],
+        "sub_interfaces": [
+            {"name": "eth1", "vlan_id": "10", "address": "192.168.100.2/24"},
+            {"name": "eth1", "vlan_id": "20", "address": "192.168.200.2/24"},
         ],
         "ospf_areas": [
             {
