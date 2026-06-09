@@ -52,8 +52,10 @@
     - name: vrrp_phy
       vyos.vyos.vyos_config:
         lines:
-          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.group }} virtual-address '{{ item.virtual_address }}'
-          - set interfaces ethernet {{ item.name }} vrrp vrrp-group {{ item.group }} priority {{ item.priority }}
+          - set high-availability vrrp group {{ item.vrid }} interface {{ item.name }}
+          - set high-availability vrrp group {{ item.vrid }} vrid {{ item.vrid }}
+          - set high-availability vrrp group {{ item.vrid }} address '{{ item.virtual_address }}'
+          - set high-availability vrrp group {{ item.vrid }} priority {{ item.priority }}
         match: line
       loop: "{{ vrrp_groups | default([]) }}"
       when: item.vlan_id is not defined
@@ -61,8 +63,10 @@
     - name: vrrp_sub_int
       vyos.vyos.vyos_config:
         lines:
-          - set interfaces ethernet {{ item.name }} vif {{ item.vlan_id }} vrrp vrrp-group {{ item.group }} virtual-address '{{ item.virtual_address }}'
-          - set interfaces ethernet {{ item.name }} vif {{ item.vlan_id }} vrrp vrrp-group {{ item.group }} priority {{ item.priority }}
+          - set high-availability vrrp group {{ item.vrid }} interface {{ item.name }}.{{ item.vlan_id }}
+          - set high-availability vrrp group {{ item.vrid }} vrid {{ item.vrid }}
+          - set high-availability vrrp group {{ item.vrid }} address '{{ item.virtual_address }}'
+          - set high-availability vrrp group {{ item.vrid }} priority {{ item.priority }}
         match: line
       loop: "{{ vrrp_groups | default([]) }}"
       when: item.vlan_id is defined
