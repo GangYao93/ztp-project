@@ -29,7 +29,7 @@
         lines:
           - set interfaces ethernet {{ item.name }} vif {{ item.vlan_id }} description '{{ item.description }}'
         match: line
-      loop: "{{ subinterfaces | default([]) }}"
+      loop: "{{ sub_interfaces | default([]) }}"
       when: item.description is defined
 
     - name: sub_int_addr
@@ -37,7 +37,7 @@
         lines:
           - set interfaces ethernet {{ item.name }} vif {{ item.vlan_id }} address {{ item.address }}
         match: line
-      loop: "{{ subinterfaces | default([]) }}"
+      loop: "{{ sub_interfaces | default([]) }}"
       when: item.address is defined
 
 
