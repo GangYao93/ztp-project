@@ -72,7 +72,7 @@ data = {
         ],
         "vrrp_groups": [
             {"name": "eth3", "vrid": "1", "vlan_id": "10", "virtual_address": "192.168.100.1/24", "priority": 110},
-            {"name": "eth3", "vrid": "1", "vlan_id": "20", "virtual_address": "192.168.200.1/24", "priority": 90},
+            {"name": "eth3", "vrid": "2", "vlan_id": "20", "virtual_address": "192.168.200.1/24", "priority": 90},
         ],
         "ospf_areas": [
             {
@@ -117,7 +117,7 @@ data = {
         ],
         "vrrp_groups": [
             {"name": "eth3", "vrid": "1", "vlan_id": "10", "address": "192.168.100.1/24", "priority": 90},
-            {"name": "eth3", "vrid": "1", "vlan_id": "20", "address": "192.168.200.1/24", "priority": 110},
+            {"name": "eth3", "vrid": "2", "vlan_id": "20", "address": "192.168.200.1/24", "priority": 110},
         ],
         "ospf_areas": [
             {
