@@ -151,40 +151,18 @@ data = {
                 "name": "VLAN20",
             }
         ],
-        "lags": [
-            {
-                "name": "Port-Channel10",
-                "members": [
-                    "eth2",
-                    "eth3"
-                ]
-            },
-            {
-                "name": "Port-Channel20",
-                "members": [
-                    "eth4",
-                    "eth5"
-                ]
-            },
-            {
-                "name": "Port-Channel30",
-                "members": [
-                    "eth6",
-                    "eth7"
-                ]
-            }
-        ],
+
         "trunk_port": [
             {
-                "name": "Port-Channel10",
+                "name": "eth2",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel20",
+                "name": "eth3",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel30",
+                "name": "eth4",
                 "vlans": [10, 20]
             },
             {
@@ -204,40 +182,17 @@ data = {
                 "name": "VLAN20",
             }
         ],
-        "lags": [
-            {
-                "name": "Port-Channel10",
-                "members": [
-                    "eth2",
-                    "eth3"
-                ]
-            },
-            {
-                "name": "Port-Channel20",
-                "members": [
-                    "eth4",
-                    "eth5"
-                ]
-            },
-            {
-                "name": "Port-Channel30",
-                "members": [
-                    "eth6",
-                    "eth7"
-                ]
-            }
-        ],
         "trunk_port": [
             {
-                "name": "Port-Channel10",
+                "name": "eth2",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel20",
+                "name": "eth3",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel30",
+                "name": "eth4",
                 "vlans": [10, 20]
             },
             {
@@ -257,50 +212,27 @@ data = {
                 "name": "VLAN20",
             }
         ],
-        "lags": [
-            {
-                "name": "Port-Channel10",
-                "members": [
-                    "eth2",
-                    "eth3"
-                ]
-            },
-            {
-                "name": "Port-Channel20",
-                "members": [
-                    "eth4",
-                    "eth5"
-                ]
-            },
-            {
-                "name": "Port-Channel30",
-                "members": [
-                    "eth6",
-                    "eth7"
-                ]
-            }
-        ],
         "trunk_port": [
             {
-                "name": "Port-Channel10",
+                "name": "eth2",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel20",
+                "name": "eth3",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel30",
+                "name": "eth4",
                 "vlans": [10, 20]
             }
         ],
         "access_port": [
             {
-                "name": "eth8",
+                "name": "eth5",
                 "vlan": "10"
             },
             {
-                "name": "eth9",
+                "name": "eth6",
                 "vlan": "20"
             }
         ]
@@ -316,50 +248,27 @@ data = {
                 "name": "VLAN20",
             }
         ],
-        "lags": [
-            {
-                "name": "Port-Channel10",
-                "members": [
-                    "eth2",
-                    "eth3"
-                ]
-            },
-            {
-                "name": "Port-Channel20",
-                "members": [
-                    "eth4",
-                    "eth5"
-                ]
-            },
-            {
-                "name": "Port-Channel30",
-                "members": [
-                    "eth6",
-                    "eth7"
-                ]
-            }
-        ],
         "trunk_port": [
             {
-                "name": "Port-Channel10",
+                "name": "eth2",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel20",
+                "name": "eth3",
                 "vlans": [10, 20]
             },
             {
-                "name": "Port-Channel30",
+                "name": "eth4",
                 "vlans": [10, 20]
             }
         ],
         "access_port": [
             {
-                "name": "eth8",
+                "name": "eth5",
                 "vlan": "10"
             },
             {
-                "name": "eth9",
+                "name": "eth6",
                 "vlan": "20"
             }
         ]
