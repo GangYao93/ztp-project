@@ -13,6 +13,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 log = logging.getLogger("device_service")
 # log.format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
+ZTP_SSH_COMMON_ARGS = "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null"
+
 data = {
     "0c:67:0d:13:00:00": {
         "interfaces": [
@@ -113,8 +115,8 @@ data = {
             {"name": "eth3", "vlan_id": "20", "address": "192.168.20.3/24"},
         ],
         "vrrp_groups": [
-            {"name": "eth3", "vrid": "1", "vlan_id": "10", "address": "192.168.10.1/24", "priority": 90},
-            {"name": "eth3", "vrid": "2", "vlan_id": "20", "address": "192.168.20.1/24", "priority": 110},
+            {"name": "eth3", "vrid": "1", "vlan_id": "10", "virtual_address": "192.168.10.1/24", "priority": 90},
+            {"name": "eth3", "vrid": "2", "vlan_id": "20", "virtual_address": "192.168.20.1/24", "priority": 110},
         ],
         "ospf_areas": [
             {
@@ -436,10 +438,14 @@ async def ansible_test(mac: str, ip_address: str, device_type: str, os_type: str
                 "all": {
                     "hosts": {
                         "device": {
-                            "ansible_host": ip_address
+                            "ansible_host": ip_address,
+                            "ansible_ssh_common_args": ZTP_SSH_COMMON_ARGS
                         }
                     }
                 }
+            },
+            envvars={
+                "ANSIBLE_HOST_KEY_CHECKING": "False"
             },
             extravars=env
         )
