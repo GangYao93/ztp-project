@@ -157,8 +157,8 @@ data = {
             {
                 "name": "Port-Channel10",
                 "members": [
-                    "Ethernet2",
-                    "Ethernet3"
+                    "eth2",
+                    "eth3"
                 ]
             }
         ],
@@ -168,17 +168,17 @@ data = {
                 "vlans": [10, 20]
             },
             {
-                "name": "Ethernet1",
+                "name": "eth1",
                 "vlans": [10, 20]
             },
         ],
         "access_port": [
             {
-                "name": "Ethernet7",
+                "name": "eth7",
                 "vlan": "10"
             },
             {
-                "name": "Ethernet8",
+                "name": "eth8",
                 "vlan": "20"
             }
         ]
@@ -198,8 +198,8 @@ data = {
             {
                 "name": "Port-Channel10",
                 "members": [
-                    "Ethernet2",
-                    "Ethernet3"
+                    "eth2",
+                    "eth3"
                 ]
             }
         ],
@@ -209,17 +209,17 @@ data = {
                 "vlans": [10, 20]
             },
             {
-                "name": "Ethernet1",
+                "name": "eth1",
                 "vlans": [10, 20]
             },
         ],
         "access_port": [
             {
-                "name": "Ethernet7",
+                "name": "eth7",
                 "vlan": "10"
             },
             {
-                "name": "Ethernet8",
+                "name": "eth8",
                 "vlan": "20"
             }
         ]
@@ -239,8 +239,8 @@ data = {
             {
                 "name": "Port-Channel10",
                 "members": [
-                    "Ethernet2",
-                    "Ethernet3"
+                    "eth2",
+                    "eth3"
                 ]
             }
         ],
@@ -250,17 +250,17 @@ data = {
                 "vlans": [10, 20]
             },
             {
-                "name": "Ethernet1",
+                "name": "eth1",
                 "vlans": [10, 20]
             },
         ],
         "access_port": [
             {
-                "name": "Ethernet7",
+                "name": "eth7",
                 "vlan": "10"
             },
             {
-                "name": "Ethernet8",
+                "name": "eth8",
                 "vlan": "20"
             }
         ]
@@ -280,8 +280,8 @@ data = {
             {
                 "name": "Port-Channel10",
                 "members": [
-                    "Ethernet2",
-                    "Ethernet3"
+                    "eth2",
+                    "eth3"
                 ]
             }
         ],
@@ -291,17 +291,17 @@ data = {
                 "vlans": [10, 20]
             },
             {
-                "name": "Ethernet1",
+                "name": "eth1",
                 "vlans": [10, 20]
             },
         ],
         "access_port": [
             {
-                "name": "Ethernet7",
+                "name": "eth7",
                 "vlan": "10"
             },
             {
-                "name": "Ethernet8",
+                "name": "eth8",
                 "vlan": "20"
             }
         ]
