@@ -14,6 +14,17 @@
           - "{{ ovs_bridge | default('br0') }}"
       changed_when: false
 
+    - name: Configure OVS spanning tree
+      ansible.builtin.command:
+        argv:
+          - ovs-vsctl
+          - set
+          - bridge
+          - "{{ ovs_bridge | default('br0') }}"
+          - "rstp_enable={{ rstp_enable | default(true) | lower }}"
+          - "stp_enable={{ stp_enable | default(false) | lower }}"
+      changed_when: false
+
     - name: Bring OVS bridge up
       ansible.builtin.command:
         argv:
