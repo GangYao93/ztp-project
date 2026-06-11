@@ -15,12 +15,10 @@
 
 
     - name: int_addr
-      vyos.vyos.vyos_l3_interfaces:
-        config:
-          - name: "{{ item.name }}"
-            ipv4:
-              - address: "{{ item.address }}"
-        state: merged
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ item.name }} address {{ item.address }}
+        match: line
       loop: "{{ interfaces | default([]) }}"
       when: item.address is defined
 

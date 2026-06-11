@@ -106,10 +106,6 @@ data = {
             {
                 "name": "eth2",
                 "address": "192.168.23.3/24"
-            },
-            {
-                "name": "eth3",
-                "address": "192.168.20.1/24"
             }
         ],
         "sub_interfaces": [
