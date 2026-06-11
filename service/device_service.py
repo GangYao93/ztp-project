@@ -330,13 +330,14 @@ async def register_device(device: DeviceRegister, db: AsyncSession):
         return Response.fail({"error": str(e)})
 
 
-async def ansible_test(mac: str, ip_address: str, device_type: str):
-    conf = data[mac]
+async def ansible_test(mac: str, ip_address: str, device_type: str, os_type: str):
+    conf = data.get(mac,None)
     if not conf:
         return Response.fail(f"{mac} not registered")
     base_dir = Path(__file__).resolve().parent.parent
 
-    playbook_name = "test_playbook.yml" if device_type == "router" else "test_vEOS.yml"
+    # playbook_name = "test_playbook.yml" if device_type == "router" else "test_vEOS.yml"
+    playbook_name = "test_playbook.yml" if device_type == "router" else "test_ovs.yml"
     playbook_path = base_dir / "playbook" / playbook_name
     print(playbook_path)
     env = {}
@@ -346,6 +347,15 @@ async def ansible_test(mac: str, ip_address: str, device_type: str):
             "ansible_ssh_pass": "vyos" if device_type == "router" else "ansible",
             "ansible_connection": "network_cli" if device_type == "router" else "localhost",
             "ansible_network_os": "vyos.vyos.vyos" if device_type == "router" else "dellemc.enterprise_sonic.sonic",
+            **conf
+        }
+    elif os_type == "alpine":
+        env = {
+            "ansible_user": "admin",
+            "ansible_ssh_pass": "password",
+            "ansible_connection": "ssh",
+            "ansible_become": "yes",
+            "ansible_become_method": "sudo",
             **conf
         }
     elif device_type == "switch":

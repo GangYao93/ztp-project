@@ -1,0 +1,121 @@
+---
+- name: Open vSwitch L2 Hybrid
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Ensure OVS bridge exists
+      ansible.builtin.command:
+        argv:
+          - ovs-vsctl
+          - --may-exist
+          - add-br
+          - "{{ ovs_bridge | default('br0') }}"
+      changed_when: false
+
+    - name: Bring OVS bridge up
+      ansible.builtin.command:
+        argv:
+          - ip
+          - link
+          - set
+          - "{{ ovs_bridge | default('br0') }}"
+          - up
+      changed_when: false
+
+    - name: Create OVS bonds
+      ansible.builtin.command:
+        cmd: >-
+          ovs-vsctl --may-exist add-bond {{ ovs_bridge | default('br0') }}
+          {{ item.name }} {{ item.members | join(' ') }} lacp=active
+      loop: "{{ lags | default([]) }}"
+      when:
+        - item.members is defined
+        - item.members | length > 0
+      changed_when: false
+
+    - name: Bring OVS bond members up
+      ansible.builtin.command:
+        argv:
+          - ip
+          - link
+          - set
+          - "{{ item.1 }}"
+          - up
+      loop: "{{ lags | default([]) | subelements('members', skip_missing=True) }}"
+      changed_when: false
+
+    - name: Add standalone trunk ports to OVS bridge
+      ansible.builtin.command:
+        argv:
+          - ovs-vsctl
+          - --may-exist
+          - add-port
+          - "{{ ovs_bridge | default('br0') }}"
+          - "{{ item.name }}"
+      loop: "{{ trunk_port | default([]) }}"
+      when: item.name not in (lags | default([]) | map(attribute='name') | list)
+      changed_when: false
+
+    - name: Bring standalone trunk ports up
+      ansible.builtin.command:
+        argv:
+          - ip
+          - link
+          - set
+          - "{{ item.name }}"
+          - up
+      loop: "{{ trunk_port | default([]) }}"
+      when: item.name not in (lags | default([]) | map(attribute='name') | list)
+      changed_when: false
+
+    - name: Configure trunk VLANs
+      ansible.builtin.command:
+        argv:
+          - ovs-vsctl
+          - set
+          - port
+          - "{{ item.name }}"
+          - "trunks={{ item.vlans | join(',') }}"
+          - "tag=[]"
+      loop: "{{ trunk_port | default([]) }}"
+      when:
+        - item.vlans is defined
+        - item.vlans | length > 0
+      changed_when: false
+
+    - name: Add access ports to OVS bridge
+      ansible.builtin.command:
+        argv:
+          - ovs-vsctl
+          - --may-exist
+          - add-port
+          - "{{ ovs_bridge | default('br0') }}"
+          - "{{ item.name }}"
+      loop: "{{ access_port | default(access_ports | default([])) }}"
+      changed_when: false
+
+    - name: Bring access ports up
+      ansible.builtin.command:
+        argv:
+          - ip
+          - link
+          - set
+          - "{{ item.name }}"
+          - up
+      loop: "{{ access_port | default(access_ports | default([])) }}"
+      changed_when: false
+
+    - name: Configure access VLANs
+      ansible.builtin.command:
+        argv:
+          - ovs-vsctl
+          - set
+          - port
+          - "{{ item.name }}"
+          - "tag={{ item.vlan }}"
+          - "trunks=[]"
+      loop: "{{ access_port | default(access_ports | default([])) }}"
+      when: item.vlan is defined
+      changed_when: false
