@@ -27,20 +27,18 @@ pipeline {
         }
 
         stage('build docker image') {
-            steps{
-                steps{
-                    sh '''
-                    docker build -t $IMAGE_NAME:&IMAGE_TAG
-                    docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-                    '''
-                }
+            steps{    
+                sh '''
+                docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+                '''
             }
         }
 
         stage('push docker image'){
             steps{
-                withCridentials([usernamePassword(
-                    cridentialsId: 'dockerhub_token',
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub_token',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
