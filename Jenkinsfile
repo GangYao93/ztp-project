@@ -51,16 +51,17 @@ pipeline {
             }
         }
 
-        post{
-            always{
-                sh '''
-                docker rmi $IMAGE_NAME:$IMAGE_TAG || true
-                docker rmi $IMAGE_NAME:latest || true
-                '''
-            }
+
+
+    }
+
+    post{
+        always{
+            sh '''
+            docker rmi $IMAGE_NAME:$IMAGE_TAG || true
+            docker rmi $IMAGE_NAME:latest || true
+            '''
         }
-
-
     }
 
 }
