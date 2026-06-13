@@ -3,6 +3,7 @@ uvicorn[standard]==0.44.0
 sqlalchemy==2.0.49
 aiosqlite==0.22.1
 pydantic==2.13.1
+fastapi-pagination==0.15.14
 ansible-core
 ansible-runner==2.4.3
 
