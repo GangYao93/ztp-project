@@ -1,0 +1,34 @@
+INITIAL_ANSIBLE_ENVS = [
+    {
+        "name": "vyos_network_cli",
+        "version": 1,
+        "is_active": True,
+        "env_json": {
+            "ansible_connection": "network_cli",
+            "ansible_network_os": "vyos.vyos.vyos"
+        }
+    },
+    {
+        "name": "ovs_ssh",
+        "version": 1,
+        "is_active": True,
+        "env_json": {
+            "ansible_connection": "ssh",
+            "ansible_become": "yes",
+            "ansible_become_method": "sudo"
+        }
+    },
+    {
+        "name": "eos_httpapi",
+        "version": 1,
+        "is_active": True,
+        "env_json": {
+            "ansible_connection": "httpapi",
+            "ansible_network_os": "arista.eos.eos",
+            "ansible_httpapi_use_ssl": "yes",
+            "ansible_httpapi_validate_certs": "no",
+            "ansible_become": "yes",
+            "ansible_become_method": "enable"
+        }
+    }
+]

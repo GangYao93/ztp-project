@@ -1,10 +1,16 @@
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import and_, select
 from schemas.response import Response
-from VO.DeviceVO import DeviceRegister
+from entity.VO.DeviceVO import DeviceRegister
+from entity.ansible_env import AnsibleEnv
+from entity.device_config import DeviceConfig
 from entity.device_info import DeviceInfo
+from entity.device_profile import DeviceProfile
+from entity.playbook import Playbook
 import logging
 import ansible_runner
 import tempfile
@@ -15,331 +21,109 @@ log = logging.getLogger("device_service")
 
 ZTP_SSH_COMMON_ARGS = "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null"
 
-data = {
-    "0c:67:0d:13:00:00": {
-        "interfaces": [
-            {
-                "name": "eth1",
-                "address": "192.168.12.1/24"
-            },
-            {
-                "name": "eth2",
-                "address": "192.168.13.1/24"
-            }
-        ],
-        "ospf_areas": [
-            {
-                "area": "0",
-                "networks": [
-                    "192.168.12.0/24",
-                    "192.168.13.0/24"
-                ]
-            }
-        ],
-        "dhcp_servers": [
-            {
-                "pool_name": "pool1",
-                "subnet": "192.168.10.0/24",
-                "id": "1",
-                "gateway": "192.168.10.1",
-                "listen_ip": "192.168.12.1",
-                "start_ip": "192.168.10.10",
-                "end_ip": "192.168.10.254",
-            },
-            {
-                "pool_name": "pool2",
-                "subnet": "192.168.20.0/24",
-                "id": "2",
-                "gateway": "192.168.20.1",
-                "listen_ip": "192.168.13.1",
-                "start_ip": "192.168.20.10",
-                "end_ip": "192.168.20.254",
-            }
-        ]
-    },
-    "0c:e7:2f:0d:00:00": {
-        "interfaces": [
-            {
-                "name": "eth1",
-                "address": "192.168.12.2/24"
-            },
-            {
-                "name": "eth2",
-                "address": "192.168.23.2/24"
-            }
-        ],
-        "sub_interfaces": [
-            {"name": "eth3", "vlan_id": "10", "address": "192.168.10.2/24"},
-            {"name": "eth3", "vlan_id": "20", "address": "192.168.20.2/24"},
-        ],
-        "vrrp_groups": [
-            {"name": "eth3", "vrid": "1", "vlan_id": "10", "virtual_address": "192.168.10.1/24", "priority": 110},
-            {"name": "eth3", "vrid": "2", "vlan_id": "20", "virtual_address": "192.168.20.1/24", "priority": 90},
-        ],
-        "ospf_areas": [
-            {
-                "area": "0",
-                "networks": [
-                    "192.168.12.0/24",
-                    "192.168.23.0/24",
-                    "192.168.10.0/24",
-                    "192.168.20.0/24"
-                ]
-            }
-        ],
-        "dhcp_relay": {
-            "servers": [
-                "192.168.12.1",
-            ],
-            "listen_interfaces": [
-                "eth3.10", "eth3.20"
-            ],
-            "upstream_interfaces": [
-                "eth1"
-            ]
-        }
-    },
-    "0c:21:dc:c6:00:00": {
-        "interfaces": [
-            {
-                "name": "eth1",
-                "address": "192.168.13.3/24"
-            },
-            {
-                "name": "eth2",
-                "address": "192.168.23.3/24"
-            }
-        ],
-        "sub_interfaces": [
-            {"name": "eth3", "vlan_id": "10", "address": "192.168.10.3/24"},
-            {"name": "eth3", "vlan_id": "20", "address": "192.168.20.3/24"},
-        ],
-        "vrrp_groups": [
-            {"name": "eth3", "vrid": "1", "vlan_id": "10", "virtual_address": "192.168.10.1/24", "priority": 90},
-            {"name": "eth3", "vrid": "2", "vlan_id": "20", "virtual_address": "192.168.20.1/24", "priority": 110},
-        ],
-        "ospf_areas": [
-            {
-                "area": "0",
-                "networks": [
-                    "192.168.23.0/24",
-                    "192.168.13.0/24",
-                    "192.168.20.0/24"
-                ]
-            }
-        ],
-        "dhcp_relay": {
-            "servers": [
-                "192.168.13.1",
-            ],
-            "listen_interfaces": [
-                "eth3.10", "eth3.20"
-            ],
-            "upstream_interfaces": [
-                "eth1"
-            ]
-        }
-    },
-    "0c:18:eb:b9:00:00": {
-        "vlans": [
-            {
-                "id": "10",
-                "name": "VLAN10",
-            },
-            {
-                "id": "20",
-                "name": "VLAN20",
-            }
-        ],
+DEFAULT_ANSIBLE_USER = "admin"
+DEFAULT_ANSIBLE_PASS = "password"
 
-        "trunk_port": [
-            {
-                "name": "eth2",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth3",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth4",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth1",
-                "vlans": [10, 20]
-            },
-        ]
-    },
-    "0c:18:eb:b8:00:00": {
-        "vlans": [
-            {
-                "id": "10",
-                "name": "VLAN10",
-            },
-            {
-                "id": "20",
-                "name": "VLAN20",
-            }
-        ],
-        "trunk_port": [
-            {
-                "name": "eth2",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth3",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth4",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth1",
-                "vlans": [10, 20]
-            },
-        ]
-    },
-    "0c:18:eb:b7:00:00": {
-        "vlans": [
-            {
-                "id": "10",
-                "name": "VLAN10",
-            },
-            {
-                "id": "20",
-                "name": "VLAN20",
-            }
-        ],
-        "trunk_port": [
-            {
-                "name": "eth2",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth3",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth4",
-                "vlans": [10, 20]
-            }
-        ],
-        "access_port": [
-            {
-                "name": "eth5",
-                "vlan": "10"
-            },
-            {
-                "name": "eth6",
-                "vlan": "20"
-            }
-        ]
-    },
-    "0c:18:eb:b6:00:00": {
-        "vlans": [
-            {
-                "id": "10",
-                "name": "VLAN10",
-            },
-            {
-                "id": "20",
-                "name": "VLAN20",
-            }
-        ],
-        "trunk_port": [
-            {
-                "name": "eth2",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth3",
-                "vlans": [10, 20]
-            },
-            {
-                "name": "eth4",
-                "vlans": [10, 20]
-            }
-        ],
-        "access_port": [
-            {
-                "name": "eth5",
-                "vlan": "10"
-            },
-            {
-                "name": "eth6",
-                "vlan": "20"
-            }
-        ]
-    }
-}
+
+@dataclass
+class AnsibleRunConfig:
+    config_json: dict[str, Any]
+    playbook_name: str
+    playbook_version: int
+    playbook_content: str
+    ansible_env_json: dict[str, Any]
 
 
 async def register_device(device: DeviceRegister, db: AsyncSession):
-    device_info = DeviceInfo(**device.model_dump())
+    device_data = device.model_dump()
+    device_data["ansible_user"] = device.ansible_user or DEFAULT_ANSIBLE_USER
+    device_data["ansible_ssh_pass"] = device.ansible_ssh_pass or DEFAULT_ANSIBLE_PASS
+    device_info = DeviceInfo(**device_data)
     stmt = select(DeviceInfo).where(DeviceInfo.mac == device_info.mac)
     res = await db.execute(stmt)
     target_device = res.scalars().first()
     if target_device:
         if target_device.ip_address != device.ip_address:
             target_device.ip_address = device_info.ip_address
-            log.info(f"Old device registered: {device_info.mac}")
-        else:
-            return Response.fail(f"{device_info.mac} already registered")
+        log.info(f"Old device refreshed: {device_info.mac}")
+        # target_device.status = device.status
+        target_device.device_type = device.device_type
+        target_device.os_type = device.os_type
+        if device.ansible_user is not None or target_device.ansible_user is None:
+            target_device.ansible_user = device_info.ansible_user
+        if device.ansible_ssh_pass is not None or target_device.ansible_ssh_pass is None:
+            target_device.ansible_ssh_pass = device_info.ansible_ssh_pass
     else:
         db.add(device_info)
         log.info(f"New device registered: {device_info.mac}")
     try:
         await db.flush()
-        return Response.success({"id": device_info.id})
+        return Response.success({"id": target_device.id if target_device else device_info.id})
     except Exception as e:
         return Response.fail({"error": str(e)})
 
 
-async def ansible_test(mac: str, ip_address: str, device_type: str, os_type: str):
-    conf = data.get(mac,None)
-    if not conf:
-        return Response.fail(f"{mac} not registered")
-    base_dir = Path(__file__).resolve().parent.parent
+async def get_ansible_run_config(device: DeviceRegister, db: AsyncSession) -> AnsibleRunConfig | None:
+    stmt = (
+        select(
+            DeviceConfig.config_json,
+            Playbook.name,
+            Playbook.version,
+            Playbook.content,
+            AnsibleEnv.env_json,
+        )
+        .select_from(DeviceConfig)
+        .join(
+            DeviceProfile,
+            and_(
+                DeviceProfile.device_type == device.device_type,
+                DeviceProfile.os_type == device.os_type,
+            )
+        )
+        .join(Playbook, Playbook.id == DeviceProfile.playbook_id)
+        .join(AnsibleEnv, AnsibleEnv.id == DeviceProfile.ansible_env_id)
+        .where(DeviceConfig.mac == device.mac)
+    )
+    res = await db.execute(stmt)
+    row = res.first()
+    if not row:
+        return None
 
-    # playbook_name = "test_playbook.yml" if device_type == "router" else "test_vEOS.yml"
-    playbook_name = "test_playbook.yml" if device_type == "router" else "test_ovs.yml"
-    playbook_path = base_dir / "playbook" / playbook_name
-    print(playbook_path)
-    env = {}
-    if device_type == "router":
-        env = {
-            "ansible_user": "vyos" if device_type == "router" else "ansible",
-            "ansible_ssh_pass": "vyos" if device_type == "router" else "ansible",
-            "ansible_connection": "network_cli" if device_type == "router" else "localhost",
-            "ansible_network_os": "vyos.vyos.vyos" if device_type == "router" else "dellemc.enterprise_sonic.sonic",
-            **conf
-        }
-    elif os_type == "alpine":
-        env = {
-            "ansible_user": "admin",
-            "ansible_ssh_pass": "password",
-            "ansible_connection": "ssh",
-            "ansible_become": "yes",
-            "ansible_become_method": "sudo",
-            **conf
-        }
-    elif device_type == "switch":
-        env = {
-            "ansible_user": "ansible",
-            "ansible_ssh_pass": "ansible",
-            "ansible_connection": "httpapi",
-            "ansible_network_os": "arista.eos.eos",
-            "ansible_httpapi_use_ssl": "yes",
-            "ansible_httpapi_validate_certs": "no",
-            "ansible_become": "yes",
-            "ansible_become_method": "enable",
-            **conf
-        }
-    log.info(f"Playbook: {playbook_name}")
+    config_json, playbook_name, playbook_version, playbook_content, ansible_env_json = row
+    return AnsibleRunConfig(
+        config_json=config_json,
+        playbook_name=playbook_name,
+        playbook_version=playbook_version,
+        playbook_content=playbook_content,
+        ansible_env_json=ansible_env_json,
+    )
+
+
+async def ansible_test(device: DeviceRegister, db: AsyncSession):
+    stmt = select(DeviceInfo).where(DeviceInfo.mac == device.mac)
+    res = await db.execute(stmt)
+    device_info = res.scalars().first()
+    if not device_info:
+        return Response.fail(f"{device.mac} has no device info")
+    if not device_info.ansible_user or not device_info.ansible_ssh_pass:
+        return Response.fail(f"{device.mac} has no ansible credential")
+
+    run_config = await get_ansible_run_config(device, db)
+    if not run_config:
+        return Response.fail(f"{device.mac} has no runnable ansible config")
+
+    env = {
+        **run_config.ansible_env_json,
+        "ansible_user": device_info.ansible_user,
+        "ansible_ssh_pass": device_info.ansible_ssh_pass,
+        **run_config.config_json
+    }
+    log.info(f"Playbook: {run_config.playbook_name} v{run_config.playbook_version}")
     log.info(f"env: {env}")
     with tempfile.TemporaryDirectory() as tmp_dir:
+        playbook_path = Path(tmp_dir) / "playbook.yml"
+        playbook_path.write_text(run_config.playbook_content, encoding="utf-8")
+        print(playbook_path)
         r = ansible_runner.run(
             private_data_dir=str(tmp_dir),
             playbook=str(playbook_path),
@@ -347,7 +131,7 @@ async def ansible_test(mac: str, ip_address: str, device_type: str, os_type: str
                 "all": {
                     "hosts": {
                         "device": {
-                            "ansible_host": ip_address,
+                            "ansible_host": device.ip_address,
                             "ansible_ssh_common_args": ZTP_SSH_COMMON_ARGS
                         }
                     }

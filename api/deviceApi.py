@@ -1,14 +1,13 @@
 from pathlib import Path
 
 import ansible_runner
-from fastapi import APIRouter, Depends,BackgroundTasks
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from VO.DeviceVO import DeviceRegister
+from entity.VO.DeviceVO import DeviceRegister
 from schemas.response import Response
 from database.database import get_database
 from service import device_service
-import os
 
 print("deviceApi loaded")
 
@@ -23,7 +22,7 @@ async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get
     device_info = await device_service.register_device(device, db)
     # if not device_info.id:
     #     return Response.fail()
-    await device_service.ansible_test(device.mac,device.ip_address, device.device_type,device.os_type)
+    await device_service.ansible_test(device, db)
     # BackgroundTasks.add_task(device_service.ansible_test, device.mac, device.ip_address)
     return Response.success(device_info)
 

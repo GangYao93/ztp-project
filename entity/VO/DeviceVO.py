@@ -7,4 +7,6 @@ class DeviceRegister(BaseModel):
     os_type: str
     status: str
     device_type: str
+    ansible_user: str | None = None
+    ansible_ssh_pass: str | None = None
 
