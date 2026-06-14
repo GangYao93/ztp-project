@@ -254,5 +254,83 @@ INITIAL_DEVICE_CONFIGS = {
                 "vlan": "20"
             }
         ]
+    },
+    "0c:89:5f:2b:00:00": {
+        "vlans": [
+            {
+                "id": "10",
+                "name": "VLAN10",
+            },
+            {
+                "id": "20",
+                "name": "VLAN20",
+            }
+        ],
+        "lags": [
+            {
+                "name": "Port-Channel10",
+                "members": [
+                    "Ethernet2",
+                    "Ethernet3"
+                ]
+            }
+        ],
+        "trunk_port": [
+            {
+                "name": "Port-Channel10",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet1",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet4",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet5",
+                "vlans": [10, 20]
+            },
+        ]
+    },
+    "0c:89:5f:2c:00:00": {
+        "vlans": [
+            {
+                "id": "10",
+                "name": "VLAN10",
+            },
+            {
+                "id": "20",
+                "name": "VLAN20",
+            }
+        ],
+        "lags": [
+            {
+                "name": "Port-Channel10",
+                "members": [
+                    "Ethernet2",
+                    "Ethernet3"
+                ]
+            }
+        ],
+        "trunk_port": [
+            {
+                "name": "Port-Channel10",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet1",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet4",
+                "vlans": [10, 20]
+            },
+            {
+                "name": "Ethernet5",
+                "vlans": [10, 20]
+            },
+        ]
     }
 }
