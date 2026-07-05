@@ -6,11 +6,36 @@
 
   vars:
     sonic_access_ports: "{{ access_port | default(access_ports | default([])) }}"
+    sonic_lag_member_ports: "{{ lags | default([]) | selectattr('members', 'defined') | map(attribute='members') | flatten | list }}"
+    sonic_trunk_ports: "{{ trunk_port | default([]) | map(attribute='name') | reject('match', '^Port-?Channel') | list }}"
+    sonic_access_port_names: "{{ sonic_access_ports | map(attribute='name') | list }}"
+    sonic_portchannel_ports: "{{ lags | default([]) | map(attribute='name') | map('regex_replace', '^Port-Channel', 'PortChannel') | list }}"
+    sonic_l2_physical_ports: "{{ (sonic_lag_member_ports + sonic_trunk_ports + sonic_access_port_names) | unique | list }}"
 
   tasks:
     - name: Create VLANs
       ansible.builtin.raw: "config vlan add {{ item.id }}"
       loop: "{{ vlans | default([]) }}"
+      changed_when: false
+
+    - name: Remove L3 config from physical L2 ports
+      ansible.builtin.raw: |
+        iface="{{ item }}"
+        sonic-db-cli CONFIG_DB del "INTERFACE|$iface" || true
+        for key in $(sonic-db-cli CONFIG_DB keys "INTERFACE|$iface|*"); do
+            sonic-db-cli CONFIG_DB del "$key" || true
+        done
+      loop: "{{ sonic_l2_physical_ports }}"
+      changed_when: false
+
+    - name: Remove L3 config from port channels
+      ansible.builtin.raw: |
+        iface="{{ item }}"
+        sonic-db-cli CONFIG_DB del "PORTCHANNEL_INTERFACE|$iface" || true
+        for key in $(sonic-db-cli CONFIG_DB keys "PORTCHANNEL_INTERFACE|$iface|*"); do
+            sonic-db-cli CONFIG_DB del "$key" || true
+        done
+      loop: "{{ sonic_portchannel_ports }}"
       changed_when: false
 
     - name: Create port channels
