@@ -25,7 +25,7 @@ INITIAL_PLAYBOOKS = [
     },
     {
         "name": "sonic_l2",
-        "version": 3,
+        "version": 5,
         "content": (BASE_DIR / "playbook" / "test_sonic.yml").read_text(encoding="utf-8"),
         "is_active": True
     }

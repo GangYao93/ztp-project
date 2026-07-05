@@ -2,66 +2,37 @@
 - name: SONiC L2 configuration
   hosts: all
   gather_facts: no
+  become: yes
 
   vars:
     sonic_access_ports: "{{ access_port | default(access_ports | default([])) }}"
 
   tasks:
     - name: Create VLANs
-      ansible.builtin.command:
-        cmd: "config vlan add {{ item.id }}"
+      ansible.builtin.raw: "config vlan add {{ item.id }}"
       loop: "{{ vlans | default([]) }}"
-      register: vlan_create_result
-      changed_when: vlan_create_result.rc == 0
-      failed_when:
-        - vlan_create_result.rc != 0
-        - "'already' not in (vlan_create_result.stderr | lower)"
-        - "'already' not in (vlan_create_result.stdout | lower)"
+      changed_when: false
 
     - name: Create port channels
-      ansible.builtin.command:
-        cmd: "config portchannel add {{ item.name | regex_replace('^Port-Channel', 'PortChannel') }}"
+      ansible.builtin.raw: "config portchannel add {{ item.name | regex_replace('^Port-Channel', 'PortChannel') }}"
       loop: "{{ lags | default([]) }}"
-      register: lag_create_result
-      changed_when: lag_create_result.rc == 0
-      failed_when:
-        - lag_create_result.rc != 0
-        - "'already' not in (lag_create_result.stderr | lower)"
-        - "'already' not in (lag_create_result.stdout | lower)"
+      changed_when: false
 
     - name: Add port channel members
-      ansible.builtin.command:
-        cmd: "config portchannel member add {{ item.0.name | regex_replace('^Port-Channel', 'PortChannel') }} {{ item.1 }}"
+      ansible.builtin.raw: "config portchannel member add {{ item.0.name | regex_replace('^Port-Channel', 'PortChannel') }} {{ item.1 }}"
       loop: "{{ lags | default([]) | subelements('members', skip_missing=True) }}"
-      register: lag_member_result
-      changed_when: lag_member_result.rc == 0
-      failed_when:
-        - lag_member_result.rc != 0
-        - "'already' not in (lag_member_result.stderr | lower)"
-        - "'already' not in (lag_member_result.stdout | lower)"
+      changed_when: false
 
     - name: Configure tagged VLAN members
-      ansible.builtin.command:
-        cmd: "config vlan member add {{ item.1 }} {{ item.0.name | regex_replace('^Port-Channel', 'PortChannel') }}"
+      ansible.builtin.raw: "config vlan member add {{ item.1 }} {{ item.0.name | regex_replace('^Port-Channel', 'PortChannel') }}"
       loop: "{{ trunk_port | default([]) | subelements('vlans', skip_missing=True) }}"
-      register: trunk_member_result
-      changed_when: trunk_member_result.rc == 0
-      failed_when:
-        - trunk_member_result.rc != 0
-        - "'already' not in (trunk_member_result.stderr | lower)"
-        - "'already' not in (trunk_member_result.stdout | lower)"
+      changed_when: false
 
     - name: Configure untagged access VLAN members
-      ansible.builtin.command:
-        cmd: "config vlan member add -u {{ item.vlan }} {{ item.name }}"
+      ansible.builtin.raw: "config vlan member add -u {{ item.vlan }} {{ item.name }}"
       loop: "{{ sonic_access_ports }}"
-      register: access_member_result
-      changed_when: access_member_result.rc == 0
-      failed_when:
-        - access_member_result.rc != 0
-        - "'already' not in (access_member_result.stderr | lower)"
-        - "'already' not in (access_member_result.stdout | lower)"
+      changed_when: false
 
     - name: Save configuration
-      ansible.builtin.command:
-        cmd: "config save -y"
+      ansible.builtin.raw: "config save -y"
+      changed_when: false
