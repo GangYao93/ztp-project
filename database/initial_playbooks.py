@@ -22,5 +22,11 @@ INITIAL_PLAYBOOKS = [
         "version": 1,
         "content": (BASE_DIR / "playbook" / "test_vEOS.yml").read_text(encoding="utf-8"),
         "is_active": True
+    },
+    {
+        "name": "sonic_l2",
+        "version": 3,
+        "content": (BASE_DIR / "playbook" / "test_sonic.yml").read_text(encoding="utf-8"),
+        "is_active": True
     }
 ]

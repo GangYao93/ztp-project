@@ -1,55 +1,67 @@
 ---
-- name: SONiC 动态 L2 网络配置 (VLAN & Switchport)
+- name: SONiC L2 configuration
   hosts: all
   gather_facts: no
+
+  vars:
+    sonic_access_ports: "{{ access_port | default(access_ports | default([])) }}"
+
   tasks:
-    # ==========================================
-    # 1. 创建全局 VLAN 实例
-    # ==========================================
-    - name: create_global_vlans
-      dellemc.enterprise_sonic.sonic_vlans:
-        config:
-          - vlan_id: "{{ item.vlan_id }}"
-            name: "{{ item.name | default('VLAN_' ~ item.vlan_id) }}"
-            admin_status: up
-        state: merged
+    - name: Create VLANs
+      ansible.builtin.command:
+        cmd: "config vlan add {{ item.id }}"
       loop: "{{ vlans | default([]) }}"
-      when: vlans is defined and vlans | length > 0
+      register: vlan_create_result
+      changed_when: vlan_create_result.rc == 0
+      failed_when:
+        - vlan_create_result.rc != 0
+        - "'already' not in (vlan_create_result.stderr | lower)"
+        - "'already' not in (vlan_create_result.stdout | lower)"
 
-    # ==========================================
-    # 2. 配置 Access 接口 (只针对 mode 为 access 的接口)
-    # ==========================================
-    - name: config_access_ports
-      dellemc.enterprise_sonic.sonic_vlan_interfaces:
-        config:
-          - name: "{{ item.name }}"
-            vlan_members:
-              - vlan_id: "{{ item.vlan }}"
-                tagging_mode: untagged  # Untagged 即代表 Access
-        state: merged
-      loop: "{{ interfaces | default([]) }}"
-      # 核心防护：只有明确声明为 access 且带有 vlan 字段的才执行
-      when: item.mode | default('') == 'access' and item.vlan is defined
+    - name: Create port channels
+      ansible.builtin.command:
+        cmd: "config portchannel add {{ item.name | regex_replace('^Port-Channel', 'PortChannel') }}"
+      loop: "{{ lags | default([]) }}"
+      register: lag_create_result
+      changed_when: lag_create_result.rc == 0
+      failed_when:
+        - lag_create_result.rc != 0
+        - "'already' not in (lag_create_result.stderr | lower)"
+        - "'already' not in (lag_create_result.stdout | lower)"
 
-    # ==========================================
-    # 3. 配置 Trunk 接口及允许的 VLAN (Allowed VLANs)
-    # ==========================================
-    - name: config_trunk_allowed_vlans
-      dellemc.enterprise_sonic.sonic_vlan_interfaces:
-        config:
-          - name: "{{ item.0.name }}"
-            vlan_members:
-              - vlan_id: "{{ item.1 }}"
-                tagging_mode: tagged    # Tagged 即代表 Trunk 允许通过
-        state: merged
-      # 使用 subelements 将 [10, 20] 拆分为两次独立的执行
-      loop: "{{ interfaces | default([]) | subelements('allowed_vlans', skip_missing=True) }}"
-      # 核心防护：只有明确声明为 trunk 的接口才执行
-      when: item.0.mode | default('') == 'trunk'
+    - name: Add port channel members
+      ansible.builtin.command:
+        cmd: "config portchannel member add {{ item.0.name | regex_replace('^Port-Channel', 'PortChannel') }} {{ item.1 }}"
+      loop: "{{ lags | default([]) | subelements('members', skip_missing=True) }}"
+      register: lag_member_result
+      changed_when: lag_member_result.rc == 0
+      failed_when:
+        - lag_member_result.rc != 0
+        - "'already' not in (lag_member_result.stderr | lower)"
+        - "'already' not in (lag_member_result.stdout | lower)"
 
-    # ==========================================
-    # 4. 保存配置到 ConfigDB
-    # ==========================================
-    - name: save_sonic_config
-      dellemc.enterprise_sonic.sonic_config:
-        save: yes
+    - name: Configure tagged VLAN members
+      ansible.builtin.command:
+        cmd: "config vlan member add {{ item.1 }} {{ item.0.name | regex_replace('^Port-Channel', 'PortChannel') }}"
+      loop: "{{ trunk_port | default([]) | subelements('vlans', skip_missing=True) }}"
+      register: trunk_member_result
+      changed_when: trunk_member_result.rc == 0
+      failed_when:
+        - trunk_member_result.rc != 0
+        - "'already' not in (trunk_member_result.stderr | lower)"
+        - "'already' not in (trunk_member_result.stdout | lower)"
+
+    - name: Configure untagged access VLAN members
+      ansible.builtin.command:
+        cmd: "config vlan member add -u {{ item.vlan }} {{ item.name }}"
+      loop: "{{ sonic_access_ports }}"
+      register: access_member_result
+      changed_when: access_member_result.rc == 0
+      failed_when:
+        - access_member_result.rc != 0
+        - "'already' not in (access_member_result.stderr | lower)"
+        - "'already' not in (access_member_result.stdout | lower)"
+
+    - name: Save configuration
+      ansible.builtin.command:
+        cmd: "config save -y"

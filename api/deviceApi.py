@@ -4,7 +4,7 @@ import ansible_runner
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from entity.VO.DeviceVO import DeviceRegister
+from entity.VO.DeviceVO import DeviceConfigQuery, DeviceRegister
 from schemas.response import Response
 from database.database import get_database
 from service import device_service
@@ -25,6 +25,11 @@ async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get
     await device_service.ansible_test(device, db)
     # BackgroundTasks.add_task(device_service.ansible_test, device.mac, device.ip_address)
     return Response.success(device_info)
+
+
+@router.post("/config/list", response_model=Response)
+async def list_device_configs(query: DeviceConfigQuery, db: AsyncSession = Depends(get_database)):
+    return await device_service.list_device_configs(query, db)
 
 
 @router.get("/test")

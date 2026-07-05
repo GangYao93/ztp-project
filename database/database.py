@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, func, select, text
+from sqlalchemy import DateTime, func, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -32,10 +32,6 @@ async def init_database():
 
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
-        await _ensure_column(connection, "device_info", "ansible_user", "VARCHAR")
-        await _ensure_column(connection, "device_info", "ansible_ssh_pass", "VARCHAR")
-        await _ensure_column(connection, "device_profile", "playbook_id", "INTEGER")
-        await _ensure_column(connection, "device_profile", "ansible_env_id", "INTEGER")
 
     async with AsyncSessionLocal() as session:
         for mac, config in INITIAL_DEVICE_CONFIGS.items():
@@ -102,7 +98,12 @@ async def init_database():
                     playbook_id=playbook_id,
                     ansible_env_id=ansible_env_id
                 ))
-            elif existing_profile.playbook_id is None or existing_profile.ansible_env_id is None:
+            elif (
+                existing_profile.playbook_id is None
+                or existing_profile.ansible_env_id is None
+                or existing_profile.playbook_id != playbook_id
+                or existing_profile.ansible_env_id != ansible_env_id
+            ):
                 existing_profile.playbook_id = playbook_id
                 existing_profile.ansible_env_id = ansible_env_id
         await session.commit()
@@ -125,10 +126,3 @@ class Base(DeclarativeBase):
 
 
 # Base = declarative_base()
-
-
-async def _ensure_column(connection, table_name: str, column_name: str, column_type: str):
-    result = await connection.execute(text(f"PRAGMA table_info({table_name})"))
-    columns = {row[1] for row in result}
-    if column_name not in columns:
-        await connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))

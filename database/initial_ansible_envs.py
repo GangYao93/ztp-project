@@ -30,5 +30,16 @@ INITIAL_ANSIBLE_ENVS = [
             "ansible_become": "yes",
             "ansible_become_method": "enable"
         }
+    },
+    {
+        "name": "sonic_ssh",
+        "version": 1,
+        "is_active": True,
+        "env_json": {
+            "ansible_connection": "ssh",
+            "ansible_become": "yes",
+            "ansible_become_method": "sudo",
+            "ansible_python_interpreter": "/usr/bin/python3"
+        }
     }
 ]

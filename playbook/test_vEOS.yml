@@ -33,7 +33,7 @@
     # ==================================================
     # 2. 批量创建 LAG 成员关系
     # ==================================================
-    - name: 2. Bind members to multiple Port-Channels
+    - name:  Port-Channels
       arista.eos.eos_lag_interfaces:
         config:
           - name: "{{ item.0.name }}"

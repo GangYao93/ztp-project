@@ -13,6 +13,6 @@ class DeviceInfo(Base):
     device_type: Mapped[str] = mapped_column(autoincrement=False, unique=False, nullable=False)
     os_type:Mapped[str] =  mapped_column(autoincrement=False, unique=False, nullable=False)
     status : Mapped[str] = mapped_column(autoincrement=False, unique=False, nullable=False)
-    ansible_user: Mapped[str | None] = mapped_column(nullable=True)
-    ansible_ssh_pass: Mapped[str | None] = mapped_column(nullable=True)
+    username: Mapped[str | None] = mapped_column(nullable=True)
+    password: Mapped[str | None] = mapped_column(nullable=True)
 

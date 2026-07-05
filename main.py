@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from database.database import init_database
 from api import deviceApi
 from tools.logger import setup_logging
+from fastapi_pagination import add_pagination
 
 
 @asynccontextmanager
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(deviceApi.router)
+add_pagination(app)
 
 
 

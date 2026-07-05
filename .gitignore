@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.kubeconfig
+secrets/
+credentials/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.tmp
+tmp/
+temp/
+
+# IDE/editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ansible
+*.retry
+.ansible/
+ansible.log
+
+# Docker/local compose overrides
+docker-compose.override.yml
+
+# Reports and generated documents
+*.docx
+*.pdf
+~$*.docx
+render_*/
+word_update_debug.log
+
+# Local app/test artifacts
+test_output/
+dist/
+build/

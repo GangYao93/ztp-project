@@ -16,5 +16,11 @@ INITIAL_DEVICE_PROFILES = [
         "os_type": "arista_eos",
         "playbook_name": "veos_l2",
         "env_name": "eos_httpapi"
+    },
+    {
+        "device_type": "switch",
+        "os_type": "sonic",
+        "playbook_name": "sonic_l2",
+        "env_name": "sonic_ssh"
     }
 ]

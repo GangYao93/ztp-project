@@ -136,19 +136,19 @@ INITIAL_DEVICE_CONFIGS = {
         ],
         "trunk_port": [
             {
-                "name": "eth2",
+                "name": "Ethernet2",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth3",
+                "name": "Ethernet3",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth4",
+                "name": "Ethernet4",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth1",
+                "name": "Ethernet1",
                 "vlans": [10, 20]
             }
         ]
@@ -166,19 +166,19 @@ INITIAL_DEVICE_CONFIGS = {
         ],
         "trunk_port": [
             {
-                "name": "eth2",
+                "name": "Ethernet2",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth3",
+                "name": "Ethernet3",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth4",
+                "name": "Ethernet4",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth1",
+                "name": "Ethernet1",
                 "vlans": [10, 20]
             }
         ]
@@ -196,25 +196,25 @@ INITIAL_DEVICE_CONFIGS = {
         ],
         "trunk_port": [
             {
-                "name": "eth2",
+                "name": "Ethernet2",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth3",
+                "name": "Ethernet3",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth4",
+                "name": "Ethernet4",
                 "vlans": [10, 20]
             }
         ],
         "access_port": [
             {
-                "name": "eth5",
+                "name": "Ethernet5",
                 "vlan": "10"
             },
             {
-                "name": "eth6",
+                "name": "Ethernet6",
                 "vlan": "20"
             }
         ]
@@ -232,25 +232,25 @@ INITIAL_DEVICE_CONFIGS = {
         ],
         "trunk_port": [
             {
-                "name": "eth2",
+                "name": "Ethernet2",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth3",
+                "name": "Ethernet3",
                 "vlans": [10, 20]
             },
             {
-                "name": "eth4",
+                "name": "Ethernet4",
                 "vlans": [10, 20]
             }
         ],
         "access_port": [
             {
-                "name": "eth5",
+                "name": "Ethernet5",
                 "vlan": "10"
             },
             {
-                "name": "eth6",
+                "name": "Ethernet6",
                 "vlan": "20"
             }
         ]

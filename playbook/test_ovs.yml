@@ -35,7 +35,7 @@
           - up
       changed_when: false
 
-    - name: Create OVS bonds
+    - name: Port-channel
       ansible.builtin.command:
         cmd: >-
           ovs-vsctl --may-exist add-bond {{ ovs_bridge | default('br0') }}
