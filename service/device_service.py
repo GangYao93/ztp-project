@@ -7,7 +7,7 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import String, and_, cast, or_, select
 from schemas.response import Response
-from entity.VO.DeviceVO import DeviceConfigQuery, DeviceRegister
+from entity.VO.DeviceVO import DeviceConfigQuery, DeviceConfigSave, DeviceInfoQuery, DeviceRegister
 from entity.ansible_env import AnsibleEnv
 from entity.device_config import DeviceConfig
 from entity.device_info import DeviceInfo
@@ -67,6 +67,60 @@ async def register_device(device: DeviceRegister, db: AsyncSession):
         return Response.fail({"error": str(e)})
 
 
+async def list_registered_devices(query: DeviceInfoQuery, db: AsyncSession):
+    stmt = select(DeviceInfo).order_by(DeviceInfo.id.desc())
+
+    filters = []
+    if query.mac:
+        filters.append(DeviceInfo.mac.like(f"%{query.mac}%"))
+    if query.ip_address:
+        filters.append(DeviceInfo.ip_address.like(f"%{query.ip_address}%"))
+    if query.device_type:
+        filters.append(DeviceInfo.device_type == query.device_type)
+    if query.os_type:
+        filters.append(DeviceInfo.os_type == query.os_type)
+    if query.status:
+        filters.append(DeviceInfo.status == query.status)
+    if query.keyword:
+        keyword = f"%{query.keyword}%"
+        filters.append(
+            or_(
+                DeviceInfo.mac.like(keyword),
+                DeviceInfo.ip_address.like(keyword),
+                DeviceInfo.device_type.like(keyword),
+                DeviceInfo.os_type.like(keyword),
+                DeviceInfo.status.like(keyword),
+                DeviceInfo.username.like(keyword),
+            )
+        )
+    if filters:
+        stmt = stmt.where(*filters)
+
+    page = await paginate(db, stmt, params=Params(page=query.page, size=query.size))
+    items = [
+        {
+            "id": item.id,
+            "mac": item.mac,
+            "ip_address": item.ip_address,
+            "device_type": item.device_type,
+            "os_type": item.os_type,
+            "status": item.status,
+            "username": item.username,
+            "password_configured": bool(item.password),
+            "create_time": item.create_time,
+            "update_time": item.update_time,
+        }
+        for item in page.items
+    ]
+    return Response.success({
+        "items": items,
+        "total": page.total,
+        "page": page.page,
+        "size": page.size,
+        "pages": page.pages,
+    })
+
+
 async def list_device_configs(query: DeviceConfigQuery, db: AsyncSession):
     stmt = (
         select(DeviceConfig, DeviceInfo)
@@ -115,6 +169,48 @@ async def list_device_configs(query: DeviceConfigQuery, db: AsyncSession):
         "size": page.size,
         "pages": page.pages,
     })
+
+
+async def save_device_config(device_config: DeviceConfigSave, db: AsyncSession):
+    stmt = select(DeviceConfig).where(DeviceConfig.mac == device_config.mac)
+    res = await db.execute(stmt)
+    target_config = res.scalars().first()
+
+    if target_config:
+        target_config.config_json = device_config.config_json
+        created = False
+    else:
+        target_config = DeviceConfig(
+            mac=device_config.mac,
+            config_json=device_config.config_json,
+        )
+        db.add(target_config)
+        created = True
+
+    try:
+        await db.flush()
+        return Response.success({
+            "id": target_config.id,
+            "mac": target_config.mac,
+            "created": created,
+        })
+    except Exception as e:
+        return Response.fail({"error": str(e)})
+
+
+async def delete_device_config(config_id: int, db: AsyncSession):
+    target_config = await db.get(DeviceConfig, config_id)
+    if target_config is None:
+        return Response.fail({"error": "device config not found"})
+
+    mac = target_config.mac
+    try:
+        await db.delete(target_config)
+        await db.flush()
+        return Response.success({"id": config_id, "mac": mac})
+    except Exception as e:
+        await db.rollback()
+        return Response.fail({"error": str(e)})
 
 
 async def get_ansible_run_config(device: DeviceRegister, db: AsyncSession) -> AnsibleRunConfig | None:

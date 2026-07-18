@@ -98,14 +98,6 @@ async def init_database():
                     playbook_id=playbook_id,
                     ansible_env_id=ansible_env_id
                 ))
-            elif (
-                existing_profile.playbook_id is None
-                or existing_profile.ansible_env_id is None
-                or existing_profile.playbook_id != playbook_id
-                or existing_profile.ansible_env_id != ansible_env_id
-            ):
-                existing_profile.playbook_id = playbook_id
-                existing_profile.ansible_env_id = ansible_env_id
         await session.commit()
 
 

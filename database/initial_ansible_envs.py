@@ -40,5 +40,17 @@ INITIAL_ANSIBLE_ENVS = [
             "ansible_become": "yes",
             "ansible_become_method": "sudo"
         }
+    },
+    {
+        "name": "cisco_ios_network_cli",
+        "version": 1,
+        "is_active": True,
+        "env_json": {
+            "ansible_connection": "ansible.netcommon.network_cli",
+            "ansible_network_os": "cisco.ios.ios",
+            "ansible_network_cli_ssh_type": "paramiko",
+            "ansible_connect_timeout": 30,
+            "ansible_command_timeout": 60
+        }
     }
 ]

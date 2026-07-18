@@ -1,0 +1,155 @@
+---
+- name: Cisco IOS L3 configuration
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Enable physical interfaces
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}"
+        lines:
+          - no shutdown
+      loop: "{{ interfaces | default([]) }}"
+
+    - name: Configure physical interface descriptions
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}"
+        lines:
+          - "description {{ item.description }}"
+      loop: "{{ interfaces | default([]) }}"
+      when: item.description is defined
+
+    - name: Configure physical interface addresses
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}"
+        lines:
+          - >-
+            ip address {{ item.address | ansible.utils.ipaddr('address') }}
+            {{ item.address | ansible.utils.ipaddr('netmask') }}
+      loop: "{{ interfaces | default([]) }}"
+      when: item.address is defined
+
+    - name: Enable sub-interface parent interfaces
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}"
+        lines:
+          - no shutdown
+      loop: "{{ sub_interfaces | default([]) }}"
+
+    - name: Configure 802.1Q sub-interfaces
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}.{{ item.vlan_id }}"
+        lines:
+          - "encapsulation dot1Q {{ item.vlan_id }}"
+          - no shutdown
+      loop: "{{ sub_interfaces | default([]) }}"
+
+    - name: Configure sub-interface descriptions
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}.{{ item.vlan_id }}"
+        lines:
+          - "description {{ item.description }}"
+      loop: "{{ sub_interfaces | default([]) }}"
+      when: item.description is defined
+
+    - name: Configure sub-interface addresses
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}.{{ item.vlan_id }}"
+        lines:
+          - >-
+            ip address {{ item.address | ansible.utils.ipaddr('address') }}
+            {{ item.address | ansible.utils.ipaddr('netmask') }}
+      loop: "{{ sub_interfaces | default([]) }}"
+      when: item.address is defined
+
+    - name: Configure OSPF router ID
+      cisco.ios.ios_config:
+        parents: "router ospf {{ ospf_process_id | default(1) }}"
+        lines:
+          - "router-id {{ ospf_router_id }}"
+      when: ospf_router_id is defined
+
+    - name: Configure OSPF networks
+      cisco.ios.ios_config:
+        parents: "router ospf {{ ospf_process_id | default(1) }}"
+        lines:
+          - >-
+            network {{ item.1 | ansible.utils.ipaddr('network') }}
+            {{ item.1 | ansible.utils.ipaddr('hostmask') }}
+            area {{ item.0.area }}
+      loop: "{{ ospf_areas | default([]) | subelements('networks', skip_missing=True) }}"
+
+    - name: Configure VRRP groups
+      cisco.ios.ios_config:
+        parents: "interface {{ vrrp_interface }}"
+        lines:
+          - >-
+            vrrp {{ item.vrid }} ip
+            {{ item.virtual_address | ansible.utils.ipaddr('address') }}
+          - "vrrp {{ item.vrid }} priority {{ item.priority | default(100) }}"
+          - "vrrp {{ item.vrid }} preempt"
+      vars:
+        vrrp_interface: >-
+          {{ item.name }}{{ '.' ~ item.vlan_id if item.vlan_id is defined else '' }}
+      loop: "{{ vrrp_groups | default([]) }}"
+
+    - name: Validate DHCP server ranges
+      ansible.builtin.assert:
+        that:
+          - item.subnet | ansible.utils.network_in_usable(item.start_ip)
+          - item.subnet | ansible.utils.network_in_usable(item.end_ip)
+          - item.subnet | ansible.utils.network_in_usable(item.gateway)
+          - >-
+            (item.start_ip | ansible.utils.ipsubnet(item.subnet)) <=
+            (item.end_ip | ansible.utils.ipsubnet(item.subnet))
+        fail_msg: >-
+          DHCP pool {{ item.pool_name }} must have an ordered start_ip and
+          end_ip inside {{ item.subnet }}
+      loop: "{{ dhcp_servers | default([]) }}"
+
+    - name: Exclude addresses before DHCP server ranges
+      cisco.ios.ios_config:
+        lines:
+          - >-
+            ip dhcp excluded-address {{ first_usable }} {{ lower_end }}
+      vars:
+        first_usable: "{{ item.subnet | ansible.utils.ipaddr('next_usable') }}"
+        lower_end: "{{ item.start_ip | ansible.utils.ipmath(-1) }}"
+      loop: "{{ dhcp_servers | default([]) }}"
+      when: item.subnet | ansible.utils.network_in_usable(lower_end)
+
+    - name: Exclude addresses after DHCP server ranges
+      cisco.ios.ios_config:
+        lines:
+          - >-
+            ip dhcp excluded-address {{ upper_start }} {{ last_usable }}
+      vars:
+        upper_start: "{{ item.end_ip | ansible.utils.ipmath(1) }}"
+        last_usable: "{{ item.subnet | ansible.utils.ipaddr('last_usable') }}"
+      loop: "{{ dhcp_servers | default([]) }}"
+      when: item.subnet | ansible.utils.network_in_usable(upper_start)
+
+    - name: Configure DHCP server pools
+      cisco.ios.ios_config:
+        parents: "ip dhcp pool {{ item.pool_name }}"
+        lines:
+          - >-
+            network {{ item.subnet | ansible.utils.ipaddr('network') }}
+            {{ item.subnet | ansible.utils.ipaddr('netmask') }}
+          - "default-router {{ item.gateway }}"
+      loop: "{{ dhcp_servers | default([]) }}"
+
+    - name: Configure DHCP relay helpers
+      cisco.ios.ios_config:
+        parents: "interface {{ item.0 }}"
+        lines:
+          - "ip helper-address {{ item.1 }}"
+      vars:
+        relay: "{{ dhcp_relay | default({}) }}"
+        relay_interfaces: "{{ relay.listen_interfaces | default([]) }}"
+        relay_servers: "{{ relay.servers | default([]) }}"
+      loop: "{{ relay_interfaces | product(relay_servers) | list }}"
+
+    - name: Save configuration when modified
+      cisco.ios.ios_config:
+        save_when: modified

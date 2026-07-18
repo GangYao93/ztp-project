@@ -4,7 +4,12 @@ import ansible_runner
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from entity.VO.DeviceVO import DeviceConfigQuery, DeviceRegister
+from entity.VO.DeviceVO import (
+    DeviceConfigQuery,
+    DeviceConfigSave,
+    DeviceInfoQuery,
+    DeviceRegister,
+)
 from schemas.response import Response
 from database.database import get_database
 from service import device_service
@@ -27,9 +32,24 @@ async def register_device(device: DeviceRegister, db: AsyncSession = Depends(get
     return Response.success(device_info)
 
 
+@router.post("/register/list", response_model=Response)
+async def list_registered_devices(query: DeviceInfoQuery, db: AsyncSession = Depends(get_database)):
+    return await device_service.list_registered_devices(query, db)
+
+
 @router.post("/config/list", response_model=Response)
 async def list_device_configs(query: DeviceConfigQuery, db: AsyncSession = Depends(get_database)):
     return await device_service.list_device_configs(query, db)
+
+
+@router.post("/config/save", response_model=Response)
+async def save_device_config(device_config: DeviceConfigSave, db: AsyncSession = Depends(get_database)):
+    return await device_service.save_device_config(device_config, db)
+
+
+@router.delete("/config/{config_id}", response_model=Response)
+async def delete_device_config(config_id: int, db: AsyncSession = Depends(get_database)):
+    return await device_service.delete_device_config(config_id, db)
 
 
 @router.get("/test")

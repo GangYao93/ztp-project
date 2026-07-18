@@ -25,8 +25,14 @@ INITIAL_PLAYBOOKS = [
     },
     {
         "name": "sonic_l2",
-        "version": 5,
+        "version": 7,
         "content": (BASE_DIR / "playbook" / "test_sonic.yml").read_text(encoding="utf-8"),
+        "is_active": True
+    },
+    {
+        "name": "cisco_l3",
+        "version": 1,
+        "content": (BASE_DIR / "playbook" / "cisco_l3.yml").read_text(encoding="utf-8"),
         "is_active": True
     }
 ]

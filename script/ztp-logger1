@@ -1,0 +1,36 @@
+LOG_FILE="/var/log/ztp-debug.log"
+
+case "$reason" in
+    BOUND|RENEW|REBIND|REBOOT)
+        echo "=====================================" >> $LOG_FILE
+        echo "$(date): Hook triggered, reason is $reason" >> $LOG_FILE
+
+        SERVER="$new_tftp_server_name"
+        FILENAME="$new_bootfile_name"
+
+        echo "Option 66 (Server): $SERVER" >> $LOG_FILE
+        echo "Option 67 (File): $FILENAME" >> $LOG_FILE
+
+        if [ -n "$SERVER" ] && [ -n "$FILENAME" ]; then
+            echo "[ZTP] ready to download $FILENAME from $SERVER..." >> $LOG_FILE
+            mkdir -p /home/ztp
+            tftp -g -r "$FILENAME" -l "/home/ztp/$FILENAME" "$SERVER"
+            if [ $? -eq 0 ]; then
+                echo "[ZTP] download complete..." >> $LOG_FILE
+                chmod +x "/home/ztp/$FILENAME"
+                (
+                    sleep 3
+                    echo "[ZTP] start running /home/ztp/$FILENAME" >> $LOG_FILE
+                    /home/ztp/$FILENAME >> $LOG_FILE 2>&1
+                ) &
+            else
+                echo "[ZTP] error：TFTP download fail" >> $LOG_FILE
+            fi
+        else
+            echo "[ZTP] ignore：did get Option 66 67 in the same time" >> $LOG_FILE
+        fi
+        ;;
+    *)
+        ;;
+esac
+                                 

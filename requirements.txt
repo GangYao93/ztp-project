@@ -11,3 +11,4 @@ paramiko==3.5.0
 ansible-pylibssh
 netmiko==4.3.0
 jmespath==1.0.1
+netaddr>=0.10.1

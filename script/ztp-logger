@@ -1,0 +1,47 @@
+# 将日志统一写入 /var/log/ztp-debug.log 方便排错
+LOG_FILE="/var/log/ztp-debug.log"
+
+# 使用标准的 POSIX case 语句替代 bash 的正则匹配
+case "$reason" in
+    BOUND|RENEW|REBIND|REBOOT)
+        echo "=====================================" >> $LOG_FILE
+        echo "$(date): Hook triggered, reason is $reason" >> $LOG_FILE
+
+        SERVER="$new_tftp_server_name"
+        FILENAME="$new_bootfile_name"
+
+        echo "Option 66 (Server): $SERVER" >> $LOG_FILE
+        echo "Option 67 (File): $FILENAME" >> $LOG_FILE
+
+        if [ -n "$SERVER" ] && [ -n "$FILENAME" ]; then
+            echo "[ZTP] 状态有效 ($reason)，准备从 $SERVER 下载 $FILENAME..." >>>
+ $LOG_FILE
+
+            # 确保目标目录存在，防止 tftp 因目录不存在而失败
+            mkdir -p /home/ztp
+
+            # 下载配置文件
+                        # 下载配置文件
+            tftp -g -r "$FILENAME" -l "/home/ztp/$FILENAME" "$SERVER"
+
+            # 检查上一条 tftp 命令是否执行成功 (状态码 0)
+            if [ $? -eq 0 ]; then
+                echo "[ZTP] 下载成功，准备赋予权限并后台执行..." >> $LOG_FILE
+                chmod +x "/home/ztp/$FILENAME"
+
+                # 【关键】放入后台执行，防止阻塞 dhclient 守护进程！
+                (
+                    # 给系统几秒钟时间完成网卡绑定的收尾工作
+                    sleep 3
+                    echo "[ZTP] 开始执行脚本 /home/ztp/$FILENAME" >> $LOG_FILE
+                    /home/ztp/$FILENAME >> $LOG_FILE 2>&1
+                ) &
+            else
+                echo "[ZTP] 错误：TFTP 下载失败！" >> $LOG_FILE
+            fi
+        else
+            echo "[ZTP] 忽略：未同时获取到 Option 66 和 67。" >> $LOG_FILE
+        fi
+        ;;
+    *)
+

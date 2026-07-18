@@ -22,5 +22,11 @@ INITIAL_DEVICE_PROFILES = [
         "os_type": "sonic",
         "playbook_name": "sonic_l2",
         "env_name": "sonic_ssh"
+    },
+    {
+        "device_type": "router",
+        "os_type": "cisco_ios",
+        "playbook_name": "cisco_l3",
+        "env_name": "cisco_ios_network_cli"
     }
 ]
